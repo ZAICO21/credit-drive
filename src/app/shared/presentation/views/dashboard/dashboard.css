@@ -236,11 +236,22 @@
   width: 116px;
   height: 116px;
   margin-top: 28px;
-  border: 8px solid #ddd0ff;
   border-radius: 50%;
+  padding: 8px;
+}
+
+.goal-ring::before {
+  grid-area: 1 / 1;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--credit-primary-soft);
+  content: '';
 }
 
 .goal-ring span {
+  z-index: 1;
+  grid-area: 1 / 1;
   color: #efe8ff;
   font-size: 24px;
   font-weight: 800;

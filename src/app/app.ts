@@ -1,14 +1,15 @@
 import {Component, inject, signal} from '@angular/core';
+import {RouterOutlet} from '@angular/router';
 import {TranslateService} from '@ngx-translate/core';
-import {Layout} from './shared/presentation/components/layout/layout';
 
 /**
- * Root component. Hosts the application shell ({@link Layout}) and configures
- * the available languages, defaulting to Spanish.
+ * Root component. Hosts the routed shell ({@link Layout} for protected
+ * routes, IAM sign-in standalone) and configures the available languages,
+ * defaulting to Spanish.
  */
 @Component({
   selector: 'app-root',
-  imports: [Layout],
+  imports: [RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

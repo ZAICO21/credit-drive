@@ -4,14 +4,34 @@
 </header>
 
 <section class="kpi-grid">
+  @for (kpi of kpis(); track kpi.label) {
     <mat-card class="kpi-card">
       <mat-card-content class="kpi-content">
         <div class="kpi-topline">
+          <span class="kpi-icon-wrap">
+            <mat-icon>{{ kpi.icon }}</mat-icon>
+          </span>
         </div>
         <span class="kpi-label">
+          {{ kpi.label | translate }}
+          <mat-icon class="kpi-help" [matTooltip]="kpi.help | translate">help_outline</mat-icon>
         </span>
+        <strong class="kpi-value">
+          @switch (kpi.format) {
+            @case ('percent') {
+              {{ kpi.value | percent: '1.2-4' }}
+            }
+            @case ('decimal') {
+              {{ kpi.value | number: '1.2-2' }}
+            }
+            @default {
+              {{ kpi.value | number: '1.0-0' }}
+            }
+          }
+        </strong>
       </mat-card-content>
     </mat-card>
+  }
 </section>
 
 <section class="quick-actions">
@@ -50,8 +70,18 @@
           </tr>
         </thead>
         <tbody>
+          @for (simulation of recentSimulations(); track simulation.id) {
             <tr>
+              <td>{{ clientName(simulation.clientId) }}</td>
+              <td>{{ vehicleName(simulation.vehicleId) }}</td>
+              <td>{{ simulation.financedAmount | number: '1.2-2' }}</td>
+              <td><span class="status-pill success">{{ 'dashboard.recent.registered' | translate }}</span></td>
             </tr>
+          } @empty {
+            <tr>
+              <td colspan="4" class="empty-cell">{{ 'dashboard.recent.empty' | translate }}</td>
+            </tr>
+          }
         </tbody>
       </table>
     </mat-card-content>
@@ -60,8 +90,16 @@
   <mat-card class="goal-card">
     <mat-card-content>
       <h2>{{ 'dashboard.goal.title' | translate }}</h2>
-      <div class="goal-ring"><span>75%</span></div>
-      <p>{{ 'dashboard.goal.remaining' | translate }}</p>
+      <div class="goal-ring"
+           [style.background]="'conic-gradient(#efe8ff ' + goalProgressPercent() + '%, rgba(255,255,255,0.24) 0)'">
+        <span>{{ goalProgressPercent() }}%</span>
+      </div>
+      <p>
+        {{ 'dashboard.goal.remaining-prefix' | translate }}
+        {{ goalRemaining() | number: '1.2-2' }}
+        {{ 'dashboard.goal.remaining-middle' | translate }}
+        {{ monthlyGoal | number: '1.2-2' }}
+      </p>
       <a mat-flat-button routerLink="/simulations">{{ 'dashboard.goal.action' | translate }}</a>
     </mat-card-content>
   </mat-card>

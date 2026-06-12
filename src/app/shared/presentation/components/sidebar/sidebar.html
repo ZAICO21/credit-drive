@@ -22,8 +22,8 @@
     <div class="sidebar-user">
       <img class="sidebar-user-avatar" src="CreditDriveProfilePic.png" alt="" />
       <div>
-        <strong>{{ 'user.name' | translate }}</strong>
-        <span>{{ 'user.role' | translate }}</span>
+        <strong>{{ iamStore.currentUser()?.fullName }}</strong>
+        <span>{{ iamStore.currentUser()?.roleName }}</span>
       </div>
     </div>
 
@@ -32,9 +32,9 @@
       <span>{{ 'sidebar.settings' | translate }}</span>
     </a>
 
-    <a mat-button class="sidebar-link sidebar-link-muted" routerLink="/logout">
+    <button mat-button type="button" class="sidebar-link sidebar-link-muted" (click)="performSignOut()">
       <mat-icon>logout</mat-icon>
       <span>{{ 'sidebar.logout' | translate }}</span>
-    </a>
+    </button>
   </div>
 </aside>
