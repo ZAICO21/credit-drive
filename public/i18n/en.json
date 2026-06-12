@@ -1,0 +1,78 @@
+﻿{
+  "app": {
+    "title": "Smart Purchase",
+    "subtitle": "Automotive Credit"
+  },
+  "user": {
+    "name": "Jorge Arevalo",
+    "role": "Advisor"
+  },
+  "sidebar": {
+    "dashboard": "Home",
+    "clients": "Clients",
+    "vehicles": "Vehicles",
+    "simulator": "Credit Simulator",
+    "simulations": "Simulations",
+    "settings": "Settings",
+    "logout": "Sign Out"
+  },
+  "header": {
+    "search": "Search clients or vehicles"
+  },
+  "language": {
+    "label": "Language",
+    "es": "Español",
+    "en": "English"
+  },
+  "dashboard": {
+    "title": "Control Panel",
+    "subtitle": "Welcome back, Jorgeh. Here is today's summary.",
+    "kpi": {
+      "simulations": "Monthly simulations",
+      "simulations-help": "Total simulations generated in the active calendar month",
+      "clients": "Registered clients",
+      "clients-help": "Number of clients registered in the system",
+      "financed": "Total financed amount",
+      "financed-help": "Accumulated sum of financed amounts",
+      "rate": "Average rate",
+      "rate-help": "Average rate from recent simulations"
+    },
+    "quick": {
+      "title": "Quick actions",
+      "new-simulation": "New simulation",
+      "new-client": "New client",
+      "new-vehicle": "New Vehicle",
+      "view-simulations": "View simulations"
+    },
+    "recent": {
+      "title": "Recent Simulations",
+      "view-all": "View all",
+      "client": "Client",
+      "vehicle": "Vehicle",
+      "amount": "Amount",
+      "status": "Status"
+    },
+    "goal": {
+      "title": "Monthly Goal",
+      "remaining": "$600k left to reach the $3M goal",
+      "action": "Analyze performance"
+    }
+  },
+  "home": {
+    "title": "Welcome to Smart Purchase",
+    "content": "Vehicle credit simulator under the Smart Purchase modality with Balloon Payment."
+  },
+  "about": {
+    "title": "About",
+    "content": "Academic project - Group 3, Finance and Economic Engineering. Vehicle credit simulator with French method, balloon payment and SBS indicators (TCEA, VAN, TIR)."
+  },
+  "page-not-found": {
+    "title": "Page not found",
+    "content": "The path <strong>{{ invalidPath }}</strong> is not valid.",
+    "go-home": "Go to Dashboard"
+  },
+  "footer": {
+    "rights": "All rights reserved.",
+    "powered-by": "Powered by Angular"
+  }
+}

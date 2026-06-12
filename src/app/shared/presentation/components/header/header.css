@@ -1,0 +1,62 @@
+﻿.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 64px;
+  padding: 0 22px;
+  background: #fbf8fd;
+  color: var(--credit-primary);
+  border-bottom: 1px solid var(--credit-border);
+}
+
+.menu-button {
+  color: var(--credit-primary);
+}
+
+.app-header-search {
+  width: min(560px, 52vw);
+}
+
+.app-header-search ::ng-deep .mat-mdc-text-field-wrapper {
+  height: 42px;
+  border-radius: 8px;
+  background: #f5eff8;
+}
+
+.app-header-search ::ng-deep .mat-mdc-form-field-infix {
+  min-height: 42px;
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+
+.app-header-search input {
+  color: var(--credit-text);
+  font-weight: 500;
+}
+
+.app-header-spacer {
+  flex: 1 1 auto;
+}
+
+.header-icon {
+  color: var(--credit-primary);
+}
+
+.header-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--credit-border);
+}
+
+@media (max-width: 720px) {
+  .app-header {
+    padding: 0 12px;
+  }
+
+  .app-header-search {
+    width: 100%;
+  }
+}

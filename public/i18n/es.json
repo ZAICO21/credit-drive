@@ -1,0 +1,78 @@
+﻿{
+  "app": {
+    "title": "Compra Inteligente",
+    "subtitle": "Crédito Automotriz"
+  },
+  "user": {
+    "name": "Jorge Arevalo",
+    "role": "Asesor"
+  },
+  "sidebar": {
+    "dashboard": "Inicio",
+    "clients": "Clientes",
+    "vehicles": "Vehículos",
+    "simulator": "Simulador de Crédito",
+    "simulations": "Simulaciones",
+    "settings": "Configuración",
+    "logout": "Cerrar Sesión"
+  },
+  "header": {
+    "search": "Buscar clientes o vehículos"
+  },
+  "language": {
+    "label": "Idioma",
+    "es": "Español",
+    "en": "English"
+  },
+  "dashboard": {
+    "title": "Panel de Control",
+    "subtitle": "Bienvenido de nuevo, Jorgeh. Aquí tienes el resumen de hoy.",
+    "kpi": {
+      "simulations": "Simulaciones del mes",
+      "simulations-help": "Total de simulaciones generadas en el mes calendario activo",
+      "clients": "Clientes registrados",
+      "clients-help": "Cantidad de clientes dados de alta en el sistema",
+      "financed": "Monto financiado total",
+      "financed-help": "Suma acumulada de montos financiados",
+      "rate": "Tasa promedio",
+      "rate-help": "Tasa promedio de las simulaciones recientes"
+    },
+    "quick": {
+      "title": "Accesos rápidos",
+      "new-simulation": "Nueva simulación",
+      "new-client": "Nuevo cliente",
+      "new-vehicle": "Nuevo Vehículo",
+      "view-simulations": "Ver simulaciones"
+    },
+    "recent": {
+      "title": "Simulaciones Recientes",
+      "view-all": "Ver todo",
+      "client": "Cliente",
+      "vehicle": "Vehículo",
+      "amount": "Monto",
+      "status": "Estado"
+    },
+    "goal": {
+      "title": "Meta Mensual",
+      "remaining": "Te faltan $600k para llegar a la meta de $3M",
+      "action": "Analizar desempeño"
+    }
+  },
+  "home": {
+    "title": "Bienvenido a Compra Inteligente",
+    "content": "Simulador de crédito vehicular bajo la modalidad Compra Inteligente con Cuota Balón."
+  },
+  "about": {
+    "title": "Acerca de",
+    "content": "Proyecto académico - Grupo 3, Finanzas e Ingeniería Económica. Simulador de crédito vehicular con método francés, cuota balón e indicadores SBS (TCEA, VAN, TIR)."
+  },
+  "page-not-found": {
+    "title": "Página no encontrada",
+    "content": "La ruta <strong>{{ invalidPath }}</strong> no es válida.",
+    "go-home": "Ir al Dashboard"
+  },
+  "footer": {
+    "rights": "Todos los derechos reservados.",
+    "powered-by": "Desarrollado con Angular"
+  }
+}

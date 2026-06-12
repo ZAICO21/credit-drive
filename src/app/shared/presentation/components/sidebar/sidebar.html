@@ -1,0 +1,40 @@
+﻿<aside class="sidebar-shell">
+  <div>
+    <div class="sidebar-brand">
+      <img class="sidebar-logo" src="CreditDriveProfilePic.png" alt="CreditDrive" />
+      <div>
+        <strong class="sidebar-brand-title">{{ 'app.title' | translate }}</strong>
+        <span class="sidebar-brand-subtitle">{{ 'app.subtitle' | translate }}</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="principal">
+      @for (option of options(); track option.link) {
+        <a mat-button class="sidebar-link" [routerLink]="option.link" routerLinkActive="active-link">
+          <mat-icon>{{ option.icon }}</mat-icon>
+          <span>{{ option.label | translate }}</span>
+        </a>
+      }
+    </nav>
+  </div>
+
+  <div class="sidebar-bottom">
+    <div class="sidebar-user">
+      <img class="sidebar-user-avatar" src="CreditDriveProfilePic.png" alt="" />
+      <div>
+        <strong>{{ 'user.name' | translate }}</strong>
+        <span>{{ 'user.role' | translate }}</span>
+      </div>
+    </div>
+
+    <a mat-button class="sidebar-link sidebar-link-muted" routerLink="/settings">
+      <mat-icon>settings</mat-icon>
+      <span>{{ 'sidebar.settings' | translate }}</span>
+    </a>
+
+    <a mat-button class="sidebar-link sidebar-link-muted" routerLink="/logout">
+      <mat-icon>logout</mat-icon>
+      <span>{{ 'sidebar.logout' | translate }}</span>
+    </a>
+  </div>
+</aside>

@@ -1,0 +1,16 @@
+﻿:host {
+  display: inline-flex;
+  align-items: center;
+}
+
+.language-trigger {
+  border: 2px solid var(--credit-primary-soft);
+  background: #ffffff;
+}
+
+.language-trigger img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}

@@ -1,1 +1,32 @@
-/* You can add global styles to this file, and also import other style files */
+﻿:root {
+  --credit-primary: #543894;
+  --credit-primary-strong: #4a2f87;
+  --credit-primary-soft: #7354b8;
+  --credit-primary-muted: #ebe5f3;
+  --credit-primary-pale: #f4eff9;
+  --credit-bg: #f6f4f8;
+  --credit-surface: #ffffff;
+  --credit-text: #25212c;
+  --credit-muted: #6f687a;
+  --credit-border: #ded8e7;
+  --credit-warning: #9b7819;
+  --credit-shadow: 0 6px 18px rgba(42, 31, 68, 0.09);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background: var(--credit-bg);
+  font-family: 'Inter', Roboto, Arial, sans-serif;
+}
+
+a {
+  color: inherit;
+}
