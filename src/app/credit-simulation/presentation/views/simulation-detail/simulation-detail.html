@@ -1,0 +1,158 @@
+@if (simulation(); as s) {
+  <header class="simulation-detail-header">
+    <div>
+      <h1>{{ 'simulation.detail-title' | translate }}</h1>
+      <p>{{ 'simulation.detail-subtitle' | translate }}</p>
+    </div>
+    <button mat-stroked-button class="export-pdf-button" type="button" (click)="exportPdf()">
+      <mat-icon>download</mat-icon>
+      {{ 'simulation.export-pdf' | translate }}
+    </button>
+  </header>
+
+  <section class="kpi-grid">
+    <article class="kpi-card primary-kpi">
+      <span>{{ 'simulation.tcea' | translate }}</span>
+      <strong>{{ s.tcea | percent: '1.2-4' }}</strong>
+      <small>{{ 'simulation.annual-effective-cost' | translate }}</small>
+    </article>
+    <article class="kpi-card">
+      <span>{{ 'simulation.van' | translate }}</span>
+      <strong>{{ s.van | number: '1.2-2' }}</strong>
+      <small>{{ vanLabelKey(s.van) | translate }}</small>
+    </article>
+    <article class="kpi-card">
+      <span>{{ 'simulation.tir' | translate }}</span>
+      <strong>{{ s.tir | percent: '1.2-4' }}</strong>
+      <small>{{ 'simulation.internal-return' | translate }}</small>
+    </article>
+    <article class="kpi-card">
+      <span>{{ 'simulation.interest-rate' | translate }}</span>
+      <strong>{{ s.interestRate | number: '1.2-2' }}%</strong>
+      <small>{{ s.rateType }}</small>
+    </article>
+    <article class="kpi-card">
+      <span>{{ 'simulation.loan-value' | translate }}</span>
+      <strong>{{ s.financedAmount | number: '1.2-2' }}</strong>
+      <small>{{ 'simulation.financed-amount' | translate }}</small>
+    </article>
+    <article class="kpi-card">
+      <span>{{ 'simulation.disbursement-date' | translate }}</span>
+      <strong>{{ s.disbursementDate }}</strong>
+      <small>{{ 'simulation.scheduled' | translate }}</small>
+    </article>
+  </section>
+
+  <section class="detail-main-grid">
+    <mat-card class="chart-card">
+      <mat-card-content>
+        <div class="section-heading">
+          <div>
+            <h2>{{ 'simulation.capital-interest-evolution' | translate }}</h2>
+            <p>{{ 'simulation.capital-interest-copy' | translate: {months: s.termMonths} }}</p>
+          </div>
+          <div class="chart-legend">
+            <span class="capital-dot"></span>{{ 'simulation.capital' | translate }}
+            <span class="interest-dot"></span>{{ 'simulation.schedule-interest' | translate }}
+          </div>
+        </div>
+
+        <svg class="trend-chart" viewBox="0 0 600 230" role="img">
+          <line x1="20" y1="35" x2="580" y2="35"></line>
+          <line x1="20" y1="95" x2="580" y2="95"></line>
+          <line x1="20" y1="155" x2="580" y2="155"></line>
+          <line x1="20" y1="215" x2="580" y2="215"></line>
+          <polyline class="capital-line" [attr.points]="capitalLinePoints()"></polyline>
+          <polyline class="interest-line" [attr.points]="interestLinePoints()"></polyline>
+          <text x="20" y="226">0</text>
+          <text x="205" y="226">{{ s.termMonths / 3 | number: '1.0-0' }}</text>
+          <text x="390" y="226">{{ s.termMonths * 2 / 3 | number: '1.0-0' }}</text>
+          <text x="548" y="226">{{ s.termMonths }}</text>
+        </svg>
+      </mat-card-content>
+    </mat-card>
+
+    <aside class="vehicle-card">
+      <div class="vehicle-hero">
+        @if (vehicleImageUrl(s.vehicleId); as imageUrl) {
+          <img [src]="imageUrl" [alt]="vehicleName(s.vehicleId)" />
+        } @else {
+          <mat-icon aria-hidden="true">directions_car</mat-icon>
+        }
+      </div>
+      <div class="vehicle-content">
+        <h2>{{ 'simulation.vehicle-detail' | translate }}</h2>
+        <p>{{ vehicleName(s.vehicleId) }}</p>
+        <dl>
+          <div>
+            <dt>{{ 'simulation.vehicle-price' | translate }}</dt>
+            <dd>{{ s.vehiclePrice | number: '1.2-2' }} {{ s.currency }}</dd>
+          </div>
+          <div>
+            <dt>{{ 'simulation.initial-fee-amount' | translate }}</dt>
+            <dd>{{ s.initialFeeAmount | number: '1.2-2' }}</dd>
+          </div>
+          <div>
+            <dt>{{ 'simulation.total-insurance' | translate }}</dt>
+            <dd>{{ totalInsurance() | number: '1.2-2' }}</dd>
+          </div>
+          <div>
+            <dt>{{ 'simulation.total-portes' | translate }}</dt>
+            <dd>{{ totalPortes() | number: '1.2-2' }}</dd>
+          </div>
+        </dl>
+      </div>
+    </aside>
+  </section>
+
+  <section class="schedule-card">
+    <div class="section-heading schedule-heading">
+      <div>
+        <h2>{{ 'simulation.schedule-title' | translate }}</h2>
+        <p>{{ 'simulation.client-column' | translate }}: {{ clientName(s.clientId) }}</p>
+      </div>
+      <div class="schedule-actions">
+        <mat-icon aria-hidden="true">print</mat-icon>
+        <mat-icon aria-hidden="true">filter_list</mat-icon>
+      </div>
+    </div>
+
+    <div class="schedule-table-wrapper">
+      <table class="schedule-table">
+        <thead>
+          <tr>
+            <th>{{ 'simulation.schedule-installment' | translate }}</th>
+            <th>{{ 'simulation.schedule-date' | translate }}</th>
+            <th>{{ 'simulation.capital' | translate }}</th>
+            <th>{{ 'simulation.schedule-amortization' | translate }}</th>
+            <th>{{ 'simulation.schedule-interest' | translate }}</th>
+            <th>{{ 'simulation.schedule-insurance' | translate }}</th>
+            <th>{{ 'simulation.schedule-portes' | translate }}</th>
+            <th>{{ 'simulation.schedule-total-payment' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of schedule(); track entry.id) {
+            <tr>
+              <td>{{ entry.installmentNumber }}</td>
+              <td>{{ entry.paymentDate }}</td>
+              <td>{{ entry.initialBalance | number: '1.2-2' }}</td>
+              <td>{{ entry.amortization | number: '1.2-2' }}</td>
+              <td class="interest-cell">{{ entry.interest | number: '1.2-2' }}</td>
+              <td>{{ entry.totalInsurance | number: '1.2-2' }}</td>
+              <td>{{ entry.portes | number: '1.2-2' }}</td>
+              <td class="payment-cell">{{ entry.totalPayment | number: '1.2-2' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="detail-actions">
+    <button mat-stroked-button routerLink="/simulations">{{ 'simulation.back' | translate }}</button>
+    <button mat-flat-button class="save-button" type="button" (click)="exportPdf()">{{ 'simulation.export-pdf' | translate }}</button>
+  </footer>
+} @else {
+  <p>{{ 'simulation.not-found' | translate }}</p>
+}
