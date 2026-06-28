@@ -1,16 +1,24 @@
 /**
- * Production environment configuration.
+ * Supabase environment configuration.
  *
- * Uses Supabase Database and Cloudinary.
+ * Used to run Angular locally against Supabase Database and Cloudinary.
+ *
+ * Run with:
+ * ng serve -c supabase
  */
 export const environment = {
-  production: true,
+  production: false,
 
+  /**
+   * Active data provider.
+   */
   dataProvider: 'supabase' as const,
 
   /**
    * Fallback JSON Server configuration.
-   * Can be removed once all bounded contexts are migrated.
+   *
+   * Keep this temporarily while migrating bounded contexts one by one.
+   * Once the whole app uses Supabase, these values can be removed.
    */
   platformProviderApiBaseUrl: 'http://localhost:3000/api/v1',
 
@@ -37,12 +45,22 @@ export const environment = {
   platformProviderPaymentScheduleEndpointPath: '/payment_schedule',
   platformProviderReportsEndpointPath: '/reports',
 
-  // Supabase Database
-  supabaseUrl: 'https://TU_PROJECT_ID.supabase.co',
-  supabasePublishableKey: 'TU_SUPABASE_ANON_OR_PUBLISHABLE_KEY',
+  /**
+   * Supabase Database configuration.
+   *
+   * Use the Project URL and anon/public key.
+   * Do not place the service_role key here.
+   */
+  supabaseUrl: 'https://rteqhzngwvruqfitjjnq.supabase.co',
+  supabasePublishableKey: 'sb_publishable_8lxoYJDDaM4vuD5tZx2-cA_f582ljyY',
 
-  // Cloudinary
-  cloudinaryCloudName: 'TU_CLOUDINARY_CLOUD_NAME',
-  cloudinaryUploadPreset: 'TU_UNSIGNED_UPLOAD_PRESET',
+  /**
+   * Cloudinary configuration.
+   *
+   * Use an unsigned upload preset for frontend uploads.
+   * Do not place Cloudinary API Secret here.
+   */
+  cloudinaryCloudName: 'su2u7cww',
+  cloudinaryUploadPreset: 'credit_drive_unsigned',
   cloudinaryFolder: 'credit-drive/vehicles',
 };

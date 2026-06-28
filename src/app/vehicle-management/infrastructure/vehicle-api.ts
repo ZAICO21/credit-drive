@@ -1,27 +1,39 @@
-import {BaseApi} from '../../shared/infrastructure/base-api';
-import {VehiclesApiEndpoint} from './vehicles-api-endpoint';
-import {VehicleImagesApiEndpoint} from './vehicle-images-api-endpoint';
-import {CurrencyCatalogsApiEndpoint} from './currency-catalogs-api-endpoint';
-import {HttpClient} from '@angular/common/http';
-import {Injectable} from '@angular/core';
-import {Vehicle} from '../domain/model/vehicle.entity';
-import {VehicleImage} from '../domain/model/vehicle-image.entity';
+import { Injectable } from '@angular/core';
+import { BaseApi } from '../../shared/infrastructure/base-api';
+import { Vehicle } from '../domain/model/vehicle.entity';
+import { VehicleImage } from '../domain/model/vehicle-image.entity';
+import { SupabaseService } from '../../shared/infrastructure/supabase.service';
+import { VehiclesApiEndpoint } from './vehicles-api-endpoint';
+import { VehicleImagesApiEndpoint } from './vehicle-images-api-endpoint';
+import { CurrencyCatalogsApiEndpoint } from './currency-catalogs-api-endpoint';
+import { VehicleAssembler } from './vehicle-assembler';
+import { VehicleImageAssembler } from './vehicle-image-assembler';
+import { CurrencyCatalogAssembler } from './currency-catalog-assembler';
 
-@Injectable({providedIn: 'root'})
+@Injectable({ providedIn: 'root' })
 export class VehicleApi extends BaseApi {
   private readonly vehiclesEndpoint: VehiclesApiEndpoint;
   private readonly vehicleImagesEndpoint: VehicleImagesApiEndpoint;
   private readonly currencyCatalogsEndpoint: CurrencyCatalogsApiEndpoint;
 
-  constructor(http: HttpClient) {
+  constructor(supabaseService: SupabaseService) {
     super();
-    this.vehiclesEndpoint = new VehiclesApiEndpoint(http);
-    this.vehicleImagesEndpoint = new VehicleImagesApiEndpoint(http);
-    this.currencyCatalogsEndpoint = new CurrencyCatalogsApiEndpoint(http);
+
+    this.vehiclesEndpoint = new VehiclesApiEndpoint(supabaseService, new VehicleAssembler());
+
+    this.vehicleImagesEndpoint = new VehicleImagesApiEndpoint(
+      supabaseService,
+      new VehicleImageAssembler(),
+    );
+
+    this.currencyCatalogsEndpoint = new CurrencyCatalogsApiEndpoint(
+      supabaseService,
+      new CurrencyCatalogAssembler(),
+    );
   }
 
-  getVehicles() {
-    return this.vehiclesEndpoint.getAll();
+  getVehiclesForUser(userId: string, roleName: string) {
+    return this.vehiclesEndpoint.getAllForUser(userId, roleName);
   }
 
   getVehicleById(id: string) {

@@ -1,52 +1,68 @@
-import {HttpClient, HttpParams} from '@angular/common/http';
-import {catchError, map, Observable, switchMap, throwError} from 'rxjs';
-import {environment} from '../../../environments/environment';
-import {ErrorHandlingEnabledBaseType} from '../../shared/infrastructure/error-handling-enabled-base-type';
-import {SignInCommand} from '../domain/model/sign-in.command';
-import {User} from '../domain/model/user.entity';
-import {SignInAssembler} from './sign-in-assembler';
-import {RoleResource, UserResource} from './users-response';
+import { from, Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { SupabaseService } from '../../shared/infrastructure/supabase.service';
+import { SignInCommand } from '../domain/model/sign-in.command';
+import { User } from '../domain/model/user.entity';
+import { SignInAssembler } from './sign-in-assembler';
+import { RoleResource, UserResource } from './users-response';
 
-const usersUrl = `${environment.platformProviderApiBaseUrl}${environment.platformProviderUsersEndpointPath}`;
-const rolesUrl = `${environment.platformProviderApiBaseUrl}${environment.platformProviderRolesEndpointPath}`;
-
-/**
- * Mock authentication endpoint.
- *
- * @remarks
- * json-server has no real auth, so sign-in is emulated as:
- * 1. `GET /users?email=...&password=...` — credential lookup.
- * 2. `GET /roles/:id` — resolve the role name for the matched user.
- *
- * Invalid-credential and disabled-account cases are surfaced as plain
- * `Error`s (not wrapped by {@link handleError}) so the store can show the
- * specific message to the user instead of a generic HTTP error.
- */
-export class SignInApiEndpoint extends ErrorHandlingEnabledBaseType {
-  constructor(private http: HttpClient, private assembler: SignInAssembler) {
-    super();
-  }
+export class SignInApiEndpoint {
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly assembler: SignInAssembler,
+  ) {}
 
   signIn(command: SignInCommand): Observable<User> {
-    const params = new HttpParams()
-      .set('email', command.email)
-      .set('password', command.password);
-
-    return this.http.get<UserResource[]>(usersUrl, {params}).pipe(
-      catchError(this.handleError('Failed to sign-in')),
-      switchMap(users => {
-        const userResource = users[0];
-        if (!userResource) {
-          return throwError(() => new Error('Correo o contraseña incorrectos.'));
-        }
-        if (!userResource.enabled) {
-          return throwError(() => new Error('Esta cuenta se encuentra deshabilitada.'));
-        }
-        return this.http.get<RoleResource>(`${rolesUrl}/${userResource.role_id}`).pipe(
-          catchError(this.handleError('Failed to fetch role')),
-          map(roleResource => this.assembler.toEntity(userResource, roleResource))
-        );
-      })
+    return from(this.signInWithSupabase(command)).pipe(
+      catchError((error: Error) =>
+        throwError(() => new Error(error.message || 'No se pudo iniciar sesión.')),
+      ),
     );
+  }
+
+  private async signInWithSupabase(command: SignInCommand): Promise<User> {
+    const supabase = this.supabaseService.client;
+
+    const email = command.email.trim().toLowerCase();
+    const password = command.password;
+
+    const { data: users, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .ilike('email', email)
+      .eq('password', password)
+      .limit(1);
+
+    if (userError) {
+      throw new Error(`Error al consultar usuario: ${userError.message}`);
+    }
+
+    const userResource = users?.[0] as UserResource | undefined;
+
+    if (!userResource) {
+      throw new Error('Correo o contraseña incorrectos.');
+    }
+
+    if (!userResource.enabled) {
+      throw new Error('Esta cuenta se encuentra deshabilitada.');
+    }
+
+    const { data: roles, error: roleError } = await supabase
+      .from('roles')
+      .select('*')
+      .eq('id', userResource.role_id)
+      .limit(1);
+
+    if (roleError) {
+      throw new Error(`Error al consultar rol: ${roleError.message}`);
+    }
+
+    const roleResource = roles?.[0] as RoleResource | undefined;
+
+    if (!roleResource) {
+      throw new Error('El usuario no tiene un rol válido asignado.');
+    }
+
+    return this.assembler.toEntity(userResource, roleResource);
   }
 }

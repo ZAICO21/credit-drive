@@ -1,12 +1,20 @@
 /**
  * Development environment configuration.
  *
- * @remarks
- * Replaces `environment.ts` during `ng serve` (see angular.json fileReplacements).
  * Points at the local json-server mock backend.
  */
 export const environment = {
   production: false,
+
+  /**
+   * Active data provider.
+   *
+   * json-server: local mock backend.
+   * supabase: Supabase PostgreSQL through supabase-js.
+   */
+  dataProvider: 'json-server' as const,
+
+  // JSON Server API
   platformProviderApiBaseUrl: 'http://localhost:3000/api/v1',
 
   // IAM
@@ -25,10 +33,19 @@ export const environment = {
   platformProviderInsuranceTypesEndpointPath: '/insurance_types',
   platformProviderSettingsEndpointPath: '/settings',
 
-  // Credit Simulation (core)
+  // Credit Simulation
   platformProviderSimulationsEndpointPath: '/simulations',
   platformProviderInsuranceSimulationsEndpointPath: '/insurance_simulations',
   platformProviderAdditionalExpensesEndpointPath: '/additional_expenses',
   platformProviderPaymentScheduleEndpointPath: '/payment_schedule',
-  platformProviderReportsEndpointPath: '/reports'
+  platformProviderReportsEndpointPath: '/reports',
+
+  // Supabase Database
+  supabaseUrl: '',
+  supabasePublishableKey: '',
+
+  // Cloudinary
+  cloudinaryCloudName: '',
+  cloudinaryUploadPreset: '',
+  cloudinaryFolder: 'credit-drive/vehicles',
 };

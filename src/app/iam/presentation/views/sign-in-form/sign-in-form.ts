@@ -1,6 +1,6 @@
 import {Component, inject, signal} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {Router} from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
 import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
@@ -17,6 +17,7 @@ import {SignInCommand} from '../../../domain/model/sign-in.command';
   selector: 'app-sign-in-form',
   imports: [
     ReactiveFormsModule,
+    RouterLink,
     TranslatePipe,
     MatCardModule,
     MatFormFieldModule,
