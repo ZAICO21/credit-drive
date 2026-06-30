@@ -11,7 +11,7 @@ export type CapitalizationType = 'DIARIA' | 'QUINCENAL' | 'MENSUAL' | 'BIMESTRAL
  * per the report's "Tipo de Capitalización" catalog (0=Diaria ... 6=Anual).
  */
 export const CAPITALIZATION_PERIODS_PER_YEAR: Record<CapitalizationType, number> = {
-  DIARIA: 365,
+  DIARIA: 360,
   QUINCENAL: 24,
   MENSUAL: 12,
   BIMESTRAL: 6,
