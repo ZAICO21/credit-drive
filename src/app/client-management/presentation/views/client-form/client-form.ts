@@ -1,4 +1,5 @@
 import {Component, inject} from '@angular/core';
+import { IamStore } from '../../../../iam/application/iam.store';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {ActivatedRoute, Router, RouterLink} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
@@ -23,26 +24,36 @@ import {ClientStore} from '../../../application/client.store';
     MatFormFieldModule,
     MatInputModule,
     MatIconModule,
-    MatButtonModule
+    MatButtonModule,
   ],
   templateUrl: './client-form.html',
-  styleUrl: './client-form.css'
+  styleUrl: './client-form.css',
 })
 export class ClientForm {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   protected readonly store = inject(ClientStore);
 
+  private readonly iamStore = inject(IamStore);
   protected clientId: string | null = null;
   protected isEdit = false;
 
   readonly form = new FormGroup({
-    name: new FormControl('', {nonNullable: true, validators: [Validators.required]}),
-    lastName: new FormControl('', {nonNullable: true, validators: [Validators.required]}),
-    dni: new FormControl('', {nonNullable: true, validators: [Validators.required, Validators.pattern(/^\d{8}$/)]}),
-    phone: new FormControl('', {nonNullable: true, validators: [Validators.required, Validators.pattern(/^\d{9}$/)]}),
-    email: new FormControl('', {nonNullable: true, validators: [Validators.required, Validators.email]}),
-    address: new FormControl('', {nonNullable: true, validators: [Validators.required]})
+    name: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    lastName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    dni: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.pattern(/^\d{8}$/)],
+    }),
+    phone: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.pattern(/^\d{9}$/)],
+    }),
+    email: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.email],
+    }),
+    address: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
   });
 
   constructor() {
@@ -58,7 +69,7 @@ export class ClientForm {
           dni: client.dni,
           phone: client.phone,
           email: client.email,
-          address: client.address
+          address: client.address,
         });
       }
     }
@@ -70,18 +81,25 @@ export class ClientForm {
       return;
     }
 
+    const currentUser = this.iamStore.currentUser();
+
+    if (!currentUser) {
+      return;
+    }
+
     const value = this.form.getRawValue();
     const previous = this.clientId ? this.store.getClientById(this.clientId)() : undefined;
 
     const client = new Client({
       id: this.clientId ?? '',
+      userId: previous?.userId ?? currentUser.id,
       name: value.name,
       lastName: value.lastName,
       dni: value.dni,
       phone: value.phone,
       email: value.email,
       address: value.address,
-      registrationDate: previous?.registrationDate ?? new Date().toISOString()
+      registrationDate: previous?.registrationDate ?? new Date().toISOString(),
     });
 
     if (this.isEdit) {

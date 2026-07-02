@@ -1,20 +1,22 @@
-import {BaseApi} from '../../shared/infrastructure/base-api';
-import {ClientsApiEndpoint} from './clients-api-endpoint';
-import {HttpClient} from '@angular/common/http';
-import {Injectable} from '@angular/core';
-import {Client} from '../domain/model/client.entity';
+import { Injectable } from '@angular/core';
+import { BaseApi } from '../../shared/infrastructure/base-api';
+import { Client } from '../domain/model/client.entity';
+import { SupabaseService } from '../../shared/infrastructure/supabase.service';
+import { ClientsApiEndpoint } from './clients-api-endpoint';
+import { ClientAssembler } from './client-assembler';
 
-@Injectable({providedIn: 'root'})
+@Injectable({ providedIn: 'root' })
 export class ClientApi extends BaseApi {
   private readonly clientsEndpoint: ClientsApiEndpoint;
 
-  constructor(http: HttpClient) {
+  constructor(supabaseService: SupabaseService) {
     super();
-    this.clientsEndpoint = new ClientsApiEndpoint(http);
+
+    this.clientsEndpoint = new ClientsApiEndpoint(supabaseService, new ClientAssembler());
   }
 
-  getClients() {
-    return this.clientsEndpoint.getAll();
+  getClientsForUser(userId: string, roleName: string) {
+    return this.clientsEndpoint.getAllForUser(userId, roleName);
   }
 
   getClientById(id: string) {

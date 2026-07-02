@@ -1,8 +1,9 @@
-import {BaseEntity} from '../../../shared/domain/model/base-entity';
-import {VehicleImage} from './vehicle-image.entity';
+import { BaseEntity } from '../../../shared/domain/model/base-entity';
+import { VehicleImage } from './vehicle-image.entity';
 
 export interface VehicleProps {
   id: string;
+  userId: string;
   brand: string;
   model: string;
   year: number;
@@ -16,6 +17,7 @@ export interface VehicleProps {
 
 export class Vehicle implements BaseEntity {
   private readonly _id: string;
+  private readonly _userId: string;
   private readonly _brand: string;
   private readonly _model: string;
   private readonly _year: number;
@@ -28,6 +30,7 @@ export class Vehicle implements BaseEntity {
 
   constructor(props: VehicleProps) {
     this._id = props.id;
+    this._userId = props.userId;
     this._brand = props.brand;
     this._model = props.model;
     this._year = props.year;
@@ -41,6 +44,10 @@ export class Vehicle implements BaseEntity {
 
   get id(): string {
     return this._id;
+  }
+
+  get userId(): string {
+    return this._userId;
   }
 
   get brand(): string {
@@ -84,12 +91,13 @@ export class Vehicle implements BaseEntity {
   }
 
   get primaryImage(): VehicleImage | undefined {
-    return this._images.find(image => image.isPrimary) ?? this._images[0];
+    return this._images.find((image) => image.isPrimary) ?? this._images[0];
   }
 
   withImages(images: VehicleImage[]): Vehicle {
     return new Vehicle({
       id: this._id,
+      userId: this._userId,
       brand: this._brand,
       model: this._model,
       year: this._year,
@@ -98,7 +106,7 @@ export class Vehicle implements BaseEntity {
       currencyCatalogId: this._currencyCatalogId,
       stock: this._stock,
       status: this._status,
-      images
+      images,
     });
   }
 }

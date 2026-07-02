@@ -1,7 +1,8 @@
-import {BaseEntity} from '../../../shared/domain/model/base-entity';
+import { BaseEntity } from '../../../shared/domain/model/base-entity';
 
 export interface ClientProps {
   id: string;
+  userId: string;
   name: string;
   lastName: string;
   dni: string;
@@ -13,6 +14,7 @@ export interface ClientProps {
 
 export class Client implements BaseEntity {
   private readonly _id: string;
+  private readonly _userId: string;
   private readonly _name: string;
   private readonly _lastName: string;
   private readonly _dni: string;
@@ -23,6 +25,7 @@ export class Client implements BaseEntity {
 
   constructor(props: ClientProps) {
     this._id = props.id;
+    this._userId = props.userId;
     this._name = props.name;
     this._lastName = props.lastName;
     this._dni = props.dni;
@@ -34,6 +37,10 @@ export class Client implements BaseEntity {
 
   get id(): string {
     return this._id;
+  }
+
+  get userId(): string {
+    return this._userId;
   }
 
   get name(): string {

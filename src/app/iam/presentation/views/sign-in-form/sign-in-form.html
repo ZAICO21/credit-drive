@@ -42,7 +42,13 @@
           {{ 'iam.sign-in.submit' | translate }}
         </button>
 
-        <button class="forgot-password" type="button">¿Olvidaste tu contraseña?</button>
+        <button class="forgot-password" type="button" routerLink="/iam/forgot-password">
+          ¿Olvidaste tu contraseña?
+        </button>
+
+        <button class="forgot-password" type="button" routerLink="/iam/sign-up">
+          Crear una cuenta nueva
+        </button>
 
         <div class="secure-access">Acceso Seguro y Encriptado</div>
       </form>

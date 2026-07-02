@@ -1,7 +1,8 @@
-import {BaseResource, BaseResponse} from '../../shared/infrastructure/base-response';
+import { BaseResource, BaseResponse } from '../../shared/infrastructure/base-response';
 
 export interface VehicleResource extends BaseResource {
   id: string;
+  user_id: string;
   brand: string;
   model: string;
   year: number;
