@@ -1,26 +1,107 @@
+import {
+  CAPITALIZATION_PERIODS_PER_YEAR,
+  CapitalizationType,
+} from '../model/credit-simulation.types';
+
 /**
- * Pure interest-rate conversion formulas (Marco conceptual, section 3 of the report).
- * All "Percent" inputs are expressed as percentages (e.g. 14.5 for 14.5%), matching
- * how rates are captured from the simulation form.
+ * Conversión de tasas para el modelo de Compra Inteligente.
+ *
+ * Convención:
+ * - Las tasas que vienen del formulario entran como porcentaje.
+ *   Ejemplo: 14.5 significa 14.5%.
+ * - Las tasas que se usan para cálculo salen como decimal.
+ *   Ejemplo: 0.01134 significa 1.134%.
  */
 export class RateConversionService {
-  /** TEA -> TEM: TEP = (1 + TEA)^(1/12) - 1 */
+  static percentToDecimal(percent: number): number {
+    return percent / 100;
+  }
+
+  static decimalToPercent(decimal: number): number {
+    return decimal * 100;
+  }
+
+  /**
+   * TEA porcentual a tasa efectiva del periodo.
+   *
+   * Para meses ordinarios:
+   * paymentFrequencyDays = 30
+   * daysPerYear = 360
+   */
+  static effectiveAnnualToPeriod(
+    teaPercent: number,
+    paymentFrequencyDays = 30,
+    daysPerYear = 360,
+  ): number {
+    const tea = this.percentToDecimal(teaPercent);
+    return Math.pow(1 + tea, paymentFrequencyDays / daysPerYear) - 1;
+  }
+
+  /**
+   * TNA porcentual a TEA decimal.
+   *
+   * TEA = (1 + TNA/m)^m - 1
+   */
+  static nominalAnnualToEffectiveAnnual(
+    tnaPercent: number,
+    capitalization: CapitalizationType = 'MENSUAL',
+  ): number {
+    const nominalRate = this.percentToDecimal(tnaPercent);
+    const periodsPerYear = CAPITALIZATION_PERIODS_PER_YEAR[capitalization];
+
+    return Math.pow(1 + nominalRate / periodsPerYear, periodsPerYear) - 1;
+  }
+
+  /**
+   * TNA porcentual a tasa efectiva del periodo.
+   */
+  static nominalAnnualToPeriod(
+    tnaPercent: number,
+    capitalization: CapitalizationType = 'MENSUAL',
+    paymentFrequencyDays = 30,
+    daysPerYear = 360,
+  ): number {
+    const teaDecimal = this.nominalAnnualToEffectiveAnnual(tnaPercent, capitalization);
+
+    return Math.pow(1 + teaDecimal, paymentFrequencyDays / daysPerYear) - 1;
+  }
+
+  /**
+   * Tasa efectiva del periodo a TEA decimal.
+   */
+  static periodToEffectiveAnnual(
+    periodRate: number,
+    paymentFrequencyDays = 30,
+    daysPerYear = 360,
+  ): number {
+    return Math.pow(1 + periodRate, daysPerYear / paymentFrequencyDays) - 1;
+  }
+
+  /**
+   * Compatibilidad con tu código anterior:
+   * TEA porcentual a TEM decimal.
+   */
   static teaToTem(teaPercent: number): number {
-    return Math.pow(1 + teaPercent / 100, 1 / 12) - 1;
+    return this.effectiveAnnualToPeriod(teaPercent, 30, 360);
   }
 
-  /** TNA con capitalización -> TEM: TEM = (1 + TNA/m)^(m/12) - 1 */
+  /**
+   * Compatibilidad con tu código anterior:
+   * TNA porcentual a TEM decimal.
+   */
   static tnaToTem(tnaPercent: number, capitalizationPeriodsPerYear: number): number {
-    return Math.pow(1 + (tnaPercent / 100) / capitalizationPeriodsPerYear, capitalizationPeriodsPerYear / 12) - 1;
+    const nominalRate = this.percentToDecimal(tnaPercent);
+    const teaDecimal =
+      Math.pow(1 + nominalRate / capitalizationPeriodsPerYear, capitalizationPeriodsPerYear) - 1;
+
+    return Math.pow(1 + teaDecimal, 30 / 360) - 1;
   }
 
-  /** TEM -> TEA: TEA = (1 + TEM)^12 - 1 */
+  /**
+   * Compatibilidad con tu código anterior:
+   * TEM decimal a TEA decimal.
+   */
   static temToTea(tem: number): number {
-    return Math.pow(1 + tem, 12) - 1;
-  }
-
-  /** General effective-rate conversion between periods: TEP2 = (1 + TEP1)^(n2/n1) - 1 */
-  static convertEffectiveRate(rate: number, fromPeriodsPerYear: number, toPeriodsPerYear: number): number {
-    return Math.pow(1 + rate, toPeriodsPerYear / fromPeriodsPerYear) - 1;
+    return this.periodToEffectiveAnnual(tem, 30, 360);
   }
 }

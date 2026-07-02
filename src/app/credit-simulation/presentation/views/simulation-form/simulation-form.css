@@ -451,3 +451,12 @@
     flex-direction: column-reverse;
   }
 }
+.expense-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.expense-actions .add-expense-button {
+  align-self: flex-start;
+}

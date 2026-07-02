@@ -1,25 +1,38 @@
-import {Component, inject} from '@angular/core';
-import {DecimalPipe, PercentPipe} from '@angular/common';
-import {ActivatedRoute, RouterLink} from '@angular/router';
-import {TranslatePipe} from '@ngx-translate/core';
-import {MatButtonModule} from '@angular/material/button';
-import {MatIconModule} from '@angular/material/icon';
-import {MatCardModule} from '@angular/material/card';
-import {CreditSimulationStore} from '../../../application/credit-simulation.store';
-import {ClientStore} from '../../../../client-management/application/client.store';
-import {VehicleStore} from '../../../../vehicle-management/application/vehicle.store';
-import {PeriodType} from '../../../domain/model/credit-simulation.types';
-import {PaymentScheduleEntry} from '../../../domain/model/payment-schedule-entry.entity';
+import { Component, inject } from '@angular/core';
+import { DecimalPipe, PercentPipe } from '@angular/common';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
 
-/** Read-only detail screen for a saved "Compra Inteligente" simulation: KPIs and cronograma. */
+import { CreditSimulationStore } from '../../../application/credit-simulation.store';
+import { ClientStore } from '../../../../client-management/application/client.store';
+import { VehicleStore } from '../../../../vehicle-management/application/vehicle.store';
+import { CashFlowType, PeriodType } from '../../../domain/model/credit-simulation.types';
+import { PaymentScheduleEntry } from '../../../domain/model/payment-schedule-entry.entity';
+
+/**
+ * Read-only detail screen for a saved Compra Inteligente simulation:
+ * KPIs, vehicle/client data and payment schedule.
+ */
 @Component({
   selector: 'app-simulation-detail',
-  imports: [RouterLink, TranslatePipe, MatButtonModule, MatIconModule, MatCardModule, DecimalPipe, PercentPipe],
+  imports: [
+    RouterLink,
+    TranslatePipe,
+    MatButtonModule,
+    MatIconModule,
+    MatCardModule,
+    DecimalPipe,
+    PercentPipe,
+  ],
   templateUrl: './simulation-detail.html',
-  styleUrl: './simulation-detail.css'
+  styleUrl: './simulation-detail.css',
 })
 export class SimulationDetail {
   private readonly route = inject(ActivatedRoute);
+
   protected readonly store = inject(CreditSimulationStore);
   private readonly clientStore = inject(ClientStore);
   private readonly vehicleStore = inject(VehicleStore);
@@ -29,27 +42,64 @@ export class SimulationDetail {
   protected readonly schedule = this.store.getScheduleBySimulationId(this.simulationId);
 
   clientName(clientId: string): string {
-    return this.clientStore.clients().find(client => client.id === clientId)?.fullName ?? '';
+    return this.clientStore.clients().find((client) => client.id === clientId)?.fullName ?? '';
   }
 
   vehicleName(vehicleId: string): string {
-    return this.vehicleStore.vehicles().find(vehicle => vehicle.id === vehicleId)?.displayName ?? '';
+    return (
+      this.vehicleStore.vehicles().find((vehicle) => vehicle.id === vehicleId)?.displayName ?? ''
+    );
   }
 
   vehicleImageUrl(vehicleId: string): string | null {
-    return this.vehicleStore.vehicles().find(vehicle => vehicle.id === vehicleId)?.primaryImage?.url ?? null;
+    return (
+      this.vehicleStore.vehicles().find((vehicle) => vehicle.id === vehicleId)?.primaryImage?.url ??
+      null
+    );
   }
 
   totalInterest(): number {
     return this.schedule().reduce((total, entry) => total + entry.interest, 0);
   }
 
+  totalRegularInterest(): number {
+    return this.schedule().reduce((total, entry) => total + entry.regularInterest, 0);
+  }
+
+  totalFinalQuotaInterest(): number {
+    return this.schedule().reduce((total, entry) => total + entry.finalQuotaInterest, 0);
+  }
+
   totalInsurance(): number {
     return this.schedule().reduce((total, entry) => total + entry.totalInsurance, 0);
   }
 
+  totalRiskInsurance(): number {
+    return this.schedule().reduce((total, entry) => total + entry.riskInsurance, 0);
+  }
+
   totalPortes(): number {
     return this.schedule().reduce((total, entry) => total + entry.portes, 0);
+  }
+
+  totalGps(): number {
+    return this.schedule().reduce((total, entry) => total + entry.gps, 0);
+  }
+
+  totalAdministrativeExpenses(): number {
+    return this.schedule().reduce((total, entry) => total + entry.administrativeExpenses, 0);
+  }
+
+  totalOtherExpenses(): number {
+    return this.schedule().reduce((total, entry) => total + entry.otherExpenses, 0);
+  }
+
+  totalBalloonPayment(): number {
+    return this.schedule().reduce((total, entry) => total + entry.balloonPayment, 0);
+  }
+
+  totalPayments(): number {
+    return this.schedule().reduce((total, entry) => total + entry.totalPayment, 0);
   }
 
   vanLabelKey(van: number): string {
@@ -57,33 +107,42 @@ export class SimulationDetail {
   }
 
   capitalLinePoints(): string {
-    return this.chartPoints(this.schedule(), entry => entry.finalBalance);
+    return this.chartPoints(this.schedule(), (entry) => entry.finalBalance);
   }
 
   interestLinePoints(): string {
-    return this.chartPoints(this.schedule(), entry => entry.interest);
+    return this.chartPoints(this.schedule(), (entry) => entry.interest);
   }
 
   exportPdf(): void {
     window.print();
   }
 
-  private chartPoints(entries: PaymentScheduleEntry[], selector: (entry: PaymentScheduleEntry) => number): string {
+  private chartPoints(
+    entries: PaymentScheduleEntry[],
+    selector: (entry: PaymentScheduleEntry) => number,
+  ): string {
     if (entries.length === 0) {
       return '';
     }
+
     const width = 560;
     const height = 160;
     const left = 20;
     const top = 20;
+
     const values = entries.map(selector);
     const max = Math.max(...values, 1);
     const lastIndex = Math.max(entries.length - 1, 1);
-    return values.map((value, index) => {
-      const x = left + (index / lastIndex) * width;
-      const y = top + height - (value / max) * height;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    }).join(' ');
+
+    return values
+      .map((value, index) => {
+        const x = left + (index / lastIndex) * width;
+        const y = top + height - (value / max) * height;
+
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      })
+      .join(' ');
   }
 
   periodLabelKey(periodType: PeriodType): string {
@@ -95,5 +154,9 @@ export class SimulationDetail {
       default:
         return 'simulation.period-normal';
     }
+  }
+
+  cashFlowTypeLabel(cashFlowType: CashFlowType): string {
+    return cashFlowType === 'BALLOON' ? 'Cuotón final' : 'Cuota';
   }
 }

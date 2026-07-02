@@ -1,4 +1,4 @@
-import {BaseResource, BaseResponse} from '../../shared/infrastructure/base-response';
+import { BaseResource, BaseResponse } from '../../shared/infrastructure/base-response';
 
 export interface AdditionalExpenseResource extends BaseResource {
   id: string;
@@ -6,9 +6,15 @@ export interface AdditionalExpenseResource extends BaseResource {
   concept: string;
   type: string;
   amount: number;
-  installment_start: number;
-  installment_end: number;
-  description: string;
+  installment_start: number | null;
+  installment_end: number | null;
+  description: string | null;
+
+  expense_stage?: string | null;
+  payment_behavior?: string | null;
+  amount_type?: string | null;
+  rate_value?: number | null;
+  base_calculation?: string | null;
 }
 
 export interface AdditionalExpensesResponse extends BaseResponse {

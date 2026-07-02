@@ -1,9 +1,24 @@
-import {BaseAssembler} from '../../shared/infrastructure/base-assembler';
-import {AdditionalExpense, AdditionalExpenseType} from '../domain/model/additional-expense.entity';
-import {AdditionalExpenseResource, AdditionalExpensesResponse} from './additional-expenses-response';
+import { BaseAssembler } from '../../shared/infrastructure/base-assembler';
+import {
+  AdditionalExpense,
+  AdditionalExpenseType,
+} from '../domain/model/additional-expense.entity';
+import {
+  ExpenseAmountType,
+  ExpenseBaseCalculation,
+  ExpensePaymentBehavior,
+  ExpenseStage,
+} from '../domain/model/credit-simulation.types';
+import {
+  AdditionalExpenseResource,
+  AdditionalExpensesResponse,
+} from './additional-expenses-response';
 
-export class AdditionalExpenseAssembler
-  implements BaseAssembler<AdditionalExpense, AdditionalExpenseResource, AdditionalExpensesResponse> {
+export class AdditionalExpenseAssembler implements BaseAssembler<
+  AdditionalExpense,
+  AdditionalExpenseResource,
+  AdditionalExpensesResponse
+> {
   toEntityFromResource(resource: AdditionalExpenseResource): AdditionalExpense {
     return new AdditionalExpense({
       id: resource.id,
@@ -13,7 +28,14 @@ export class AdditionalExpenseAssembler
       amount: resource.amount,
       installmentStart: resource.installment_start,
       installmentEnd: resource.installment_end,
-      description: resource.description
+      description: resource.description,
+
+      expenseStage: (resource.expense_stage ?? 'PERIODIC') as ExpenseStage,
+      paymentBehavior: (resource.payment_behavior ??
+        'PAID_IN_INSTALLMENT') as ExpensePaymentBehavior,
+      amountType: (resource.amount_type ?? 'FIXED') as ExpenseAmountType,
+      rateValue: resource.rate_value ?? null,
+      baseCalculation: (resource.base_calculation ?? 'FIXED_AMOUNT') as ExpenseBaseCalculation,
     });
   }
 
@@ -26,11 +48,17 @@ export class AdditionalExpenseAssembler
       amount: entity.amount,
       installment_start: entity.installmentStart,
       installment_end: entity.installmentEnd,
-      description: entity.description
+      description: entity.description,
+
+      expense_stage: entity.expenseStage,
+      payment_behavior: entity.paymentBehavior,
+      amount_type: entity.amountType,
+      rate_value: entity.rateValue,
+      base_calculation: entity.baseCalculation,
     };
   }
 
   toEntitiesFromResponse(response: AdditionalExpensesResponse): AdditionalExpense[] {
-    return response.additional_expenses.map(resource => this.toEntityFromResource(resource));
+    return response.additional_expenses.map((resource) => this.toEntityFromResource(resource));
   }
 }

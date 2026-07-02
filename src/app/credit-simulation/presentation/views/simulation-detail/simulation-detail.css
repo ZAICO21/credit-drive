@@ -383,3 +383,19 @@
     display: none;
   }
 }
+
+.secondary-kpi-grid {
+  margin-bottom: 22px;
+}
+
+.balloon-row {
+  background: #fff8e7;
+}
+
+.balloon-row td {
+  font-weight: 900;
+}
+
+.schedule-table {
+  min-width: 1900px;
+}
