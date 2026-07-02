@@ -12,6 +12,11 @@ export class InsuranceTypeAssembler implements BaseAssembler<
   InsuranceTypesResponse
 > {
   toEntityFromResource(resource: InsuranceTypeResource): InsuranceType {
+    const baseCalculation = this.normalizeBaseCalculation(
+      resource.base_calculation,
+      resource.base_calculo,
+    );
+
     return new InsuranceType({
       id: resource.id,
       name: resource.name,
@@ -23,18 +28,22 @@ export class InsuranceTypeAssembler implements BaseAssembler<
 
       rateValue: resource.rate_value ?? resource.tasa_mensual,
       ratePeriod: (resource.rate_period ?? 'PERIODIC') as InsuranceRatePeriod,
-      baseCalculation: (resource.base_calculation ??
-        this.mapLegacyBaseCalculation(resource.base_calculo)) as InsuranceBaseCalculation,
+      baseCalculation,
     });
   }
 
   toResourceFromEntity(entity: InsuranceType): InsuranceTypeResource {
+    const baseCalculation = this.normalizeBaseCalculation(
+      entity.baseCalculation,
+      entity.baseCalculo,
+    );
+
     return {
       id: entity.id,
       name: entity.name,
       description: entity.description,
 
-      base_calculo: entity.baseCalculo ?? this.mapBaseCalculationToLegacy(entity.baseCalculation),
+      base_calculo: entity.baseCalculo ?? this.mapBaseCalculationToLegacy(baseCalculation),
       tasa_mensual: entity.monthlyRate,
 
       mandatory: entity.mandatory,
@@ -42,7 +51,7 @@ export class InsuranceTypeAssembler implements BaseAssembler<
 
       rate_value: entity.rateValue,
       rate_period: entity.ratePeriod,
-      base_calculation: entity.baseCalculation,
+      base_calculation: baseCalculation,
     };
   }
 
@@ -50,7 +59,26 @@ export class InsuranceTypeAssembler implements BaseAssembler<
     return response.insurance_types.map((resource) => this.toEntityFromResource(resource));
   }
 
-  private mapLegacyBaseCalculation(baseCalculo: string | null): InsuranceBaseCalculation {
+  private normalizeBaseCalculation(
+    baseCalculation?: string | null,
+    legacyBaseCalculo?: string | null,
+  ): InsuranceBaseCalculation {
+    const normalized = (baseCalculation ?? '').trim().toUpperCase();
+
+    if (
+      normalized === 'REGULAR_BALANCE' ||
+      normalized === 'FINAL_QUOTA_BALANCE' ||
+      normalized === 'VEHICLE_PRICE' ||
+      normalized === 'LOAN_AMOUNT' ||
+      normalized === 'FIXED_AMOUNT'
+    ) {
+      return normalized as InsuranceBaseCalculation;
+    }
+
+    return this.mapLegacyBaseCalculation(legacyBaseCalculo);
+  }
+
+  private mapLegacyBaseCalculation(baseCalculo?: string | null): InsuranceBaseCalculation {
     const normalized = (baseCalculo ?? '').trim().toUpperCase();
 
     if (normalized === 'VEHICULO') {
