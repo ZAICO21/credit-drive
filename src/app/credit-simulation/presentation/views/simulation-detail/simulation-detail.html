@@ -109,6 +109,16 @@
         </div>
 
         <div>
+          <dt>Tipo de cambio USD/PEN</dt>
+          <dd>{{ s.exchangeRateUsdPen | number: '1.4-4' }}</dd>
+        </div>
+
+        <div>
+          <dt>Moneda de simulación</dt>
+          <dd>{{ s.currency }}</dd>
+        </div>
+
+        <div>
           <dt>{{ 'simulation.initial-fee-amount' | translate }}</dt>
           <dd>{{ s.initialFeeAmount | number: '1.2-2' }}</dd>
         </div>
