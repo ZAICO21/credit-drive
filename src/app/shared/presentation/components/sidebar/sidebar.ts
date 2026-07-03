@@ -1,9 +1,10 @@
-﻿import {Component, inject, signal} from '@angular/core';
+﻿import {Component, EventEmitter, Input, inject, Output, signal} from '@angular/core';
 import {Router, RouterLink, RouterLinkActive} from '@angular/router';
 import {TranslatePipe} from '@ngx-translate/core';
 import {MatListModule} from '@angular/material/list';
 import {MatIconModule} from '@angular/material/icon';
 import {MatButtonModule} from '@angular/material/button';
+import {MatTooltipModule} from '@angular/material/tooltip';
 import {IamStore} from '../../../../iam/application/iam.store';
 
 interface NavOption {
@@ -14,11 +15,25 @@ interface NavOption {
 
 @Component({
   selector: 'app-sidebar',
-  imports: [RouterLink, RouterLinkActive, TranslatePipe, MatListModule, MatIconModule, MatButtonModule],
+  imports: [
+    RouterLink,
+    RouterLinkActive,
+    TranslatePipe,
+    MatListModule,
+    MatIconModule,
+    MatButtonModule,
+    MatTooltipModule
+  ],
+  host: {'[class.collapsed]': 'collapsed'},
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css'
 })
 export class Sidebar {
+  /** Whether the desktop rail is collapsed to icon-only mode. */
+  @Input() collapsed = false;
+  @Output() readonly menuToggle = new EventEmitter<void>();
+  /** Emitted whenever a navigation action is taken, so the host can close a mobile drawer. */
+  @Output() readonly navigate = new EventEmitter<void>();
   private readonly router = inject(Router);
   protected readonly iamStore = inject(IamStore);
 

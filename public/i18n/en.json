@@ -96,10 +96,44 @@
     "simulator": "Credit Simulator",
     "simulations": "Simulations",
     "settings": "Settings",
-    "logout": "Sign Out"
+    "logout": "Sign Out",
+    "expand-menu": "Expand menu",
+    "collapse-menu": "Collapse menu"
+  },
+  "settings": {
+    "title": "Account Settings",
+    "subtitle": "Manage your profile, email and password",
+    "profile-title": "Profile Information",
+    "profile-subtitle": "Update your personal details",
+    "name": "First Name",
+    "name-required": "First name is required",
+    "last-name": "Last Name",
+    "last-name-required": "Last name is required",
+    "username": "Username",
+    "username-required": "Username is required",
+    "username-minlength": "Must be at least 4 characters",
+    "email-title": "Email Address",
+    "email-subtitle": "Used to sign in to your account",
+    "email": "Email",
+    "email-required": "Email is required",
+    "email-invalid": "Enter a valid email",
+    "password-title": "Password",
+    "password-subtitle": "Change your account password",
+    "current-password": "Current Password",
+    "current-password-required": "Enter your current password",
+    "new-password": "New Password",
+    "new-password-required": "Enter a new password",
+    "new-password-minlength": "Must be at least 6 characters",
+    "confirm-password": "Confirm New Password",
+    "confirm-password-required": "Confirm your new password",
+    "password-mismatch": "Passwords do not match",
+    "save": "Save Changes",
+    "cancel": "Cancel",
+    "saving": "Saving..."
   },
   "header": {
-    "search": "Search clients or vehicles"
+    "search": "Search clients or vehicles",
+    "toggle-menu": "Toggle menu"
   },
   "language": {
     "label": "Language",
@@ -108,7 +142,7 @@
   },
   "dashboard": {
     "title": "Control Panel",
-    "subtitle": "Welcome back, Jorgeh. Here is today's summary.",
+    "subtitle": "Welcome back, {{name}}. Here is today's summary.",
     "kpi": {
       "simulations": "Monthly simulations",
       "simulations-help": "Total simulations generated in the active calendar month",

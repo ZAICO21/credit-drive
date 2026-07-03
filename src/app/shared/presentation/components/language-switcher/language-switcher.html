@@ -1,5 +1,5 @@
 ﻿<button mat-icon-button class="language-trigger" [matMenuTriggerFor]="menu" aria-label="language">
-  <img src="CreditDriveProfilePic.png" alt="" />
+  <span class="language-code">{{ current().toUpperCase() }}</span>
 </button>
 <mat-menu #menu="matMenu">
   @for (lang of languages; track lang) {

@@ -4,6 +4,9 @@ import { IamApi } from '../infrastructure/iam-api';
 import { SignInCommand } from '../domain/model/sign-in.command';
 import { SignUpCommand } from '../domain/model/sign-up.command';
 import { ResetPasswordCommand } from '../domain/model/reset-password.command';
+import { UpdateProfileCommand } from '../domain/model/update-profile.command';
+import { UpdateEmailCommand } from '../domain/model/update-email.command';
+import { UpdatePasswordCommand } from '../domain/model/update-password.command';
 import { User, UserProps } from '../domain/model/user.entity';
 
 const SESSION_STORAGE_KEY = 'compra-inteligente.session';
@@ -28,6 +31,14 @@ export class IamStore {
   private readonly resetPasswordErrorSignal = signal<string | null>(null);
   private readonly resetPasswordSuccessSignal = signal<string | null>(null);
 
+  private readonly settingsLoadingSignal = signal(false);
+  private readonly updateProfileErrorSignal = signal<string | null>(null);
+  private readonly updateProfileSuccessSignal = signal<string | null>(null);
+  private readonly updateEmailErrorSignal = signal<string | null>(null);
+  private readonly updateEmailSuccessSignal = signal<string | null>(null);
+  private readonly updatePasswordErrorSignal = signal<string | null>(null);
+  private readonly updatePasswordSuccessSignal = signal<string | null>(null);
+
   readonly currentUser = this.currentUserSignal.asReadonly();
   readonly currentToken = this.tokenSignal.asReadonly();
   readonly signInError = this.errorSignal.asReadonly();
@@ -39,6 +50,14 @@ export class IamStore {
 
   readonly resetPasswordError = this.resetPasswordErrorSignal.asReadonly();
   readonly resetPasswordSuccess = this.resetPasswordSuccessSignal.asReadonly();
+
+  readonly isSettingsSaving = this.settingsLoadingSignal.asReadonly();
+  readonly updateProfileError = this.updateProfileErrorSignal.asReadonly();
+  readonly updateProfileSuccess = this.updateProfileSuccessSignal.asReadonly();
+  readonly updateEmailError = this.updateEmailErrorSignal.asReadonly();
+  readonly updateEmailSuccess = this.updateEmailSuccessSignal.asReadonly();
+  readonly updatePasswordError = this.updatePasswordErrorSignal.asReadonly();
+  readonly updatePasswordSuccess = this.updatePasswordSuccessSignal.asReadonly();
 
   constructor() {
     this.restoreSession();
@@ -135,5 +154,96 @@ export class IamStore {
   signOut(router: Router): void {
     this.clearSession();
     router.navigate(['/iam/sign-in']).then();
+  }
+
+  /** Updates the current user's name, last name and username. */
+  updateProfile(command: UpdateProfileCommand): void {
+    const current = this.currentUserSignal();
+    if (!current) return;
+
+    this.settingsLoadingSignal.set(true);
+    this.updateProfileErrorSignal.set(null);
+    this.updateProfileSuccessSignal.set(null);
+
+    this.iamApi.updateProfile(current.id, command).subscribe({
+      next: () => {
+        const updated = new User({
+          ...current.toProps(),
+          name: command.name,
+          lastName: command.lastName,
+          username: command.username,
+        });
+        this.setCurrentUser(updated);
+        this.updateProfileSuccessSignal.set('Perfil actualizado correctamente.');
+        this.settingsLoadingSignal.set(false);
+      },
+      error: (err: Error) => {
+        this.updateProfileErrorSignal.set(err.message || 'No se pudo actualizar el perfil.');
+        this.settingsLoadingSignal.set(false);
+      },
+    });
+  }
+
+  /** Updates the current user's email address. */
+  updateEmail(command: UpdateEmailCommand): void {
+    const current = this.currentUserSignal();
+    if (!current) return;
+
+    this.settingsLoadingSignal.set(true);
+    this.updateEmailErrorSignal.set(null);
+    this.updateEmailSuccessSignal.set(null);
+
+    this.iamApi.updateEmail(current.id, command).subscribe({
+      next: () => {
+        const updated = new User({ ...current.toProps(), email: command.email.trim().toLowerCase() });
+        this.setCurrentUser(updated);
+        this.updateEmailSuccessSignal.set('Correo actualizado correctamente.');
+        this.settingsLoadingSignal.set(false);
+      },
+      error: (err: Error) => {
+        this.updateEmailErrorSignal.set(err.message || 'No se pudo actualizar el correo.');
+        this.settingsLoadingSignal.set(false);
+      },
+    });
+  }
+
+  /** Updates the current user's password after verifying the current one. */
+  updatePassword(command: UpdatePasswordCommand): void {
+    const current = this.currentUserSignal();
+    if (!current) return;
+
+    this.settingsLoadingSignal.set(true);
+    this.updatePasswordErrorSignal.set(null);
+    this.updatePasswordSuccessSignal.set(null);
+
+    this.iamApi.updatePassword(current.id, command).subscribe({
+      next: () => {
+        this.updatePasswordSuccessSignal.set('Contraseña actualizada correctamente.');
+        this.settingsLoadingSignal.set(false);
+      },
+      error: (err: Error) => {
+        this.updatePasswordErrorSignal.set(err.message || 'No se pudo actualizar la contraseña.');
+        this.settingsLoadingSignal.set(false);
+      },
+    });
+  }
+
+  /** Clears any leftover Settings feedback messages, e.g. when the page is (re)entered. */
+  clearSettingsMessages(): void {
+    this.updateProfileErrorSignal.set(null);
+    this.updateProfileSuccessSignal.set(null);
+    this.updateEmailErrorSignal.set(null);
+    this.updateEmailSuccessSignal.set(null);
+    this.updatePasswordErrorSignal.set(null);
+    this.updatePasswordSuccessSignal.set(null);
+  }
+
+  /** Updates the held user and re-persists the session under the existing token. */
+  private setCurrentUser(user: User): void {
+    this.currentUserSignal.set(user);
+    const token = this.tokenSignal();
+    if (token) {
+      this.persistSession(user, token);
+    }
   }
 }
