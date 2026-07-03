@@ -122,7 +122,7 @@
 
 .expense-row {
   display: grid;
-  grid-template-columns: 1.3fr 1fr 0.9fr 0.8fr 0.8fr 1.4fr auto;
+  grid-template-columns: 1.3fr 1fr 1fr 0.8fr 0.8fr 0.8fr 1.4fr auto;
   gap: 10px;
   align-items: start;
 }

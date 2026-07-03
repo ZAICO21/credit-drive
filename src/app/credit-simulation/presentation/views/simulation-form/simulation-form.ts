@@ -30,6 +30,7 @@ import {
   ExpensePaymentBehavior,
   ExpenseStage,
   PeriodType,
+  RatePeriodType,
   RateType,
 } from '../../../domain/model/credit-simulation.types';
 
@@ -121,6 +122,15 @@ export class SimulationForm {
     'MENSUAL',
     'BIMESTRAL',
     'TRIMESTRAL',
+    'CUATRIMESTRAL',
+    'SEMESTRAL',
+    'ANUAL',
+  ];
+
+  protected readonly ratePeriodOptions: RatePeriodType[] = [
+    'MENSUAL',
+    'TRIMESTRAL',
+    'CUATRIMESTRAL',
     'SEMESTRAL',
     'ANUAL',
   ];
@@ -155,6 +165,7 @@ export class SimulationForm {
     finalQuotaPercentage: [30, [Validators.required, Validators.min(0), Validators.max(100)]],
 
     rateType: ['EFECTIVA' as RateType, Validators.required],
+    ratePeriod: ['ANUAL' as RatePeriodType, Validators.required],
     interestRate: [0, [Validators.required, Validators.min(0)]],
     capitalization: ['MENSUAL' as CapitalizationType, Validators.required],
 
@@ -222,6 +233,42 @@ export class SimulationForm {
       .subscribe((vehicleId) => this.onVehicleChange(vehicleId));
 
     this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.result.set(null));
+  }
+
+  protected ratePeriodLabel(period: RatePeriodType): string {
+    switch (period) {
+      case 'MENSUAL':
+        return 'Mensual';
+      case 'TRIMESTRAL':
+        return 'Trimestral';
+      case 'CUATRIMESTRAL':
+        return 'Cuatrimestral';
+      case 'SEMESTRAL':
+        return 'Semestral';
+      case 'ANUAL':
+        return 'Anual';
+    }
+  }
+
+  protected capitalizationLabel(capitalization: CapitalizationType): string {
+    switch (capitalization) {
+      case 'DIARIA':
+        return 'Diaria';
+      case 'QUINCENAL':
+        return 'Quincenal';
+      case 'MENSUAL':
+        return 'Mensual';
+      case 'BIMESTRAL':
+        return 'Bimestral';
+      case 'TRIMESTRAL':
+        return 'Trimestral';
+      case 'CUATRIMESTRAL':
+        return 'Cuatrimestral';
+      case 'SEMESTRAL':
+        return 'Semestral';
+      case 'ANUAL':
+        return 'Anual';
+    }
   }
 
   private todayIso(): string {
@@ -309,11 +356,100 @@ export class SimulationForm {
       group.controls.paymentBehavior.setValue('FINANCED');
       group.controls.installmentStart.setValue(1);
       group.controls.installmentEnd.setValue(1);
+
+      this.clearPeriodErrors(group);
       return;
     }
 
     group.controls.type.setValue('PERIODICO');
     group.controls.paymentBehavior.setValue('PAID_IN_INSTALLMENT');
+
+    const currentStart = group.controls.installmentStart.value;
+    const currentEnd = group.controls.installmentEnd.value;
+
+    group.controls.installmentStart.setValue(currentStart >= 1 ? currentStart : 1);
+    group.controls.installmentEnd.setValue(currentEnd > 1 ? currentEnd : this.maxExpensePeriod());
+
+    this.validateExpensePeriods();
+  }
+
+  protected maxExpensePeriod(): number {
+    const term = Number(this.form.controls.termMonths.value ?? 0);
+
+    return Math.max(term + 1, 1);
+  }
+
+  protected expenseBehaviorLabel(group: ExpenseGroup): string {
+    return group.controls.paymentBehavior.value === 'FINANCED' ? 'Financiado' : 'Pagado en cuota';
+  }
+
+  protected validateExpensePeriods(): boolean {
+    let isValid = true;
+    const maxPeriod = this.maxExpensePeriod();
+
+    this.additionalExpenses.controls.forEach((group) => {
+      const stage = group.controls.expenseStage.value;
+
+      this.enforceExpenseBehavior(group);
+      this.clearPeriodErrors(group);
+
+      if (stage !== 'PERIODIC') {
+        return;
+      }
+
+      const start = Number(group.controls.installmentStart.value);
+      const end = Number(group.controls.installmentEnd.value);
+
+      if (!start || start < 1) {
+        this.setControlError(group.controls.installmentStart, 'invalidStartPeriod', true);
+        isValid = false;
+      }
+
+      if (!end || end < start) {
+        this.setControlError(group.controls.installmentEnd, 'invalidEndPeriod', true);
+        isValid = false;
+      }
+
+      if (end > maxPeriod) {
+        this.setControlError(group.controls.installmentEnd, 'maxExpensePeriodExceeded', true);
+        isValid = false;
+      }
+    });
+
+    return isValid;
+  }
+
+  private enforceExpenseBehavior(group: ExpenseGroup): void {
+    const stage = group.controls.expenseStage.value;
+
+    if (stage === 'INITIAL') {
+      group.controls.type.setValue('UNICO', { emitEvent: false });
+      group.controls.paymentBehavior.setValue('FINANCED', { emitEvent: false });
+      group.controls.installmentStart.setValue(1, { emitEvent: false });
+      group.controls.installmentEnd.setValue(1, { emitEvent: false });
+      return;
+    }
+
+    group.controls.type.setValue('PERIODICO', { emitEvent: false });
+    group.controls.paymentBehavior.setValue('PAID_IN_INSTALLMENT', { emitEvent: false });
+  }
+
+  private clearPeriodErrors(group: ExpenseGroup): void {
+    this.setControlError(group.controls.installmentStart, 'invalidStartPeriod', false);
+    this.setControlError(group.controls.installmentEnd, 'invalidEndPeriod', false);
+    this.setControlError(group.controls.installmentEnd, 'maxExpensePeriodExceeded', false);
+  }
+
+  private setControlError(control: FormControl<number>, errorKey: string, enabled: boolean): void {
+    const errors = { ...(control.errors ?? {}) };
+
+    if (enabled) {
+      errors[errorKey] = true;
+    } else {
+      delete errors[errorKey];
+    }
+
+    control.setErrors(Object.keys(errors).length > 0 ? errors : null);
   }
 
   private buildInput(): CreditSimulationInput {
@@ -354,6 +490,7 @@ export class SimulationForm {
 
       rateType: value.rateType,
       interestRate: value.interestRate,
+      ratePeriod: value.ratePeriod,
       capitalization: value.rateType === 'NOMINAL' ? value.capitalization : null,
 
       paymentFrequencyDays: value.paymentFrequencyDays,
@@ -390,7 +527,7 @@ export class SimulationForm {
   }
 
   simulate(): void {
-    if (this.form.invalid) {
+    if (!this.validateExpensePeriods() || this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
@@ -406,7 +543,8 @@ export class SimulationForm {
   save(): void {
     const result = this.result();
 
-    if (!result || this.form.invalid) {
+    if (!result || !this.validateExpensePeriods() || this.form.invalid) {
+      this.form.markAllAsTouched();
       return;
     }
 
