@@ -116,13 +116,24 @@
             <mat-form-field appearance="outline">
               <mat-label>{{ 'simulation.rate-type' | translate }}</mat-label>
               <mat-select formControlName="rateType">
-                <mat-option value="EFECTIVA">{{ 'simulation.rate-type-effective' | translate }}</mat-option>
-                <mat-option value="NOMINAL">{{ 'simulation.rate-type-nominal' | translate }}</mat-option>
+                <mat-option value="EFECTIVA">Efectiva</mat-option>
+                <mat-option value="NOMINAL">Nominal</mat-option>
               </mat-select>
             </mat-form-field>
 
             <mat-form-field appearance="outline">
-              <mat-label>{{ 'simulation.interest-rate' | translate }}</mat-label>
+              <mat-label>Periodo de la tasa</mat-label>
+              <mat-select formControlName="ratePeriod">
+                @for (option of ratePeriodOptions; track option) {
+                <mat-option [value]="option">
+                  {{ ratePeriodLabel(option) }}
+                </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Valor de tasa (%)</mat-label>
               <input matInput type="number" formControlName="interestRate" />
               @if (form.controls.interestRate.hasError('required')) {
               <mat-error>{{ 'simulation.interest-rate-required' | translate }}</mat-error>
@@ -234,10 +245,11 @@
 
               <mat-form-field appearance="outline">
                 <mat-label>Comportamiento</mat-label>
-                <mat-select formControlName="paymentBehavior">
-                  <mat-option value="FINANCED">Financiado</mat-option>
-                  <mat-option value="PAID_IN_INSTALLMENT">Pagado en cuota</mat-option>
-                </mat-select>
+                <input
+                  matInput
+                  type="text"
+                  [value]="expenseBehaviorLabel(group)"
+                  readonly />
               </mat-form-field>
 
               <mat-form-field appearance="outline">
@@ -245,15 +257,41 @@
                 <input matInput type="number" formControlName="amount" />
               </mat-form-field>
 
-              @if (group.controls.expenseStage.value !== 'INITIAL') {
+              @if (group.controls.expenseStage.value === 'PERIODIC') {
               <mat-form-field appearance="outline">
                 <mat-label>{{ 'simulation.expense-installment-start' | translate }}</mat-label>
-                <input matInput type="number" formControlName="installmentStart" />
+                <input
+                  matInput
+                  type="number"
+                  formControlName="installmentStart"
+                  min="1"
+                  [max]="maxExpensePeriod()"
+                  (input)="validateExpensePeriods()" />
+
+                @if (group.controls.installmentStart.hasError('invalidStartPeriod')) {
+                <mat-error>El periodo inicial debe ser mayor o igual a 1.</mat-error>
+                }
               </mat-form-field>
 
               <mat-form-field appearance="outline">
                 <mat-label>{{ 'simulation.expense-installment-end' | translate }}</mat-label>
-                <input matInput type="number" formControlName="installmentEnd" />
+                <input
+                  matInput
+                  type="number"
+                  formControlName="installmentEnd"
+                  min="1"
+                  [max]="maxExpensePeriod()"
+                  (input)="validateExpensePeriods()" />
+
+                @if (group.controls.installmentEnd.hasError('invalidEndPeriod')) {
+                <mat-error>El periodo final debe ser mayor o igual al periodo inicial.</mat-error>
+                }
+
+                @if (group.controls.installmentEnd.hasError('maxExpensePeriodExceeded')) {
+                <mat-error>
+                  El periodo final no puede exceder {{ maxExpensePeriod() }}.
+                </mat-error>
+                }
               </mat-form-field>
               }
 
@@ -370,7 +408,7 @@
           </strong>
 
           <span>{{ 'simulation.term-months' | translate }}</span>
-          <strong>{{ form.controls.termMonths.value }} meses</strong>
+          <strong>{{ form.controls.termMonths.value }} cuotas</strong>
         </div>
 
         <button mat-flat-button class="quote-button" type="button" [disabled]="!result()" (click)="save()">
@@ -422,7 +460,7 @@
       </div>
 
       <div class="result-card">
-        <span class="result-label">TEM / tasa periodo</span>
+        <span class="result-label">Tasa efectiva del periodo</span>
         <span class="result-value">{{ simulationResult.periodEffectiveRate | percent: '1.2-4' }}</span>
       </div>
 
@@ -452,56 +490,71 @@
     </h3>
 
     <div class="schedule-table-wrapper">
-      <table class="schedule-table">
+      <table class="schedule-table excel-schedule-table">
         <thead>
         <tr>
           <th>N°</th>
-          <th>Tipo</th>
-          <th>Flujo</th>
-          <th>Saldo regular inicial</th>
-          <th>Interés regular</th>
-          <th>Desgravamen regular</th>
-          <th>Amortización regular</th>
-          <th>Saldo regular final</th>
-          <th>Saldo cuotón inicial</th>
-          <th>Interés cuotón</th>
-          <th>Desgravamen cuotón</th>
-          <th>Seguro riesgo</th>
+          <th>PG</th>
+          <th>Tipo flujo</th>
+
+          <th>SICF</th>
+          <th>ICF</th>
+          <th>ACF</th>
+          <th>Seg. Des. CF</th>
+          <th>SFCF</th>
+
+          <th>SI</th>
+          <th>I</th>
+          <th>Cuota</th>
+          <th>A</th>
+          <th>Seg. Des.</th>
+          <th>SF</th>
+
+          <th>Seg. Riesgo</th>
           <th>GPS</th>
           <th>Portes</th>
           <th>Gastos adm.</th>
           <th>Otros gastos</th>
-          <th>Cuotón</th>
+          <th>Cuota final</th>
           <th>Pago total</th>
+          <th>Flujo caja</th>
         </tr>
         </thead>
 
         <tbody>
         @for (period of simulationResult.schedule; track period.installmentNumber) {
-        <tr>
+        <tr [class.balloon-row]="period.isBalloonPayment">
           <td>{{ period.installmentNumber }}</td>
-          <td>{{ periodLabelKey(period.periodType) | translate }}</td>
+          <td class="pg-cell">{{ pgLabel(period.periodType, period.cashFlowType) }}</td>
           <td>{{ cashFlowTypeLabel(period.cashFlowType) }}</td>
-          <td>{{ period.initialRegularBalance | number: '1.2-2' }}</td>
-          <td>{{ period.regularInterest | number: '1.2-2' }}</td>
-          <td>{{ period.regularDesgravamen | number: '1.2-2' }}</td>
-          <td>{{ period.regularAmortization | number: '1.2-2' }}</td>
-          <td>{{ period.finalRegularBalance | number: '1.2-2' }}</td>
+
           <td>{{ period.initialFinalQuotaBalance | number: '1.2-2' }}</td>
-          <td>{{ period.finalQuotaInterest | number: '1.2-2' }}</td>
+          <td class="interest-cell">{{ period.finalQuotaInterest | number: '1.2-2' }}</td>
+          <td>{{ period.finalQuotaAmortization | number: '1.2-2' }}</td>
           <td>{{ period.finalQuotaDesgravamen | number: '1.2-2' }}</td>
+          <td>{{ period.finalFinalQuotaBalance | number: '1.2-2' }}</td>
+
+          <td>{{ period.initialRegularBalance | number: '1.2-2' }}</td>
+          <td class="interest-cell">{{ period.regularInterest | number: '1.2-2' }}</td>
+          <td>{{ period.regularQuota | number: '1.2-2' }}</td>
+          <td>{{ period.regularAmortization | number: '1.2-2' }}</td>
+          <td>{{ period.regularDesgravamen | number: '1.2-2' }}</td>
+          <td>{{ period.finalRegularBalance | number: '1.2-2' }}</td>
+
           <td>{{ period.riskInsurance | number: '1.2-2' }}</td>
           <td>{{ period.gps | number: '1.2-2' }}</td>
           <td>{{ period.portes | number: '1.2-2' }}</td>
           <td>{{ period.administrativeExpenses | number: '1.2-2' }}</td>
           <td>{{ period.otherExpenses | number: '1.2-2' }}</td>
           <td>{{ period.balloonPayment | number: '1.2-2' }}</td>
-          <td>{{ period.totalPayment | number: '1.2-2' }}</td>
+          <td class="payment-cell">{{ period.totalPayment | number: '1.2-2' }}</td>
+          <td>{{ period.cashFlow | number: '1.2-2' }}</td>
         </tr>
         }
         </tbody>
       </table>
     </div>
+
   </div>
   }
 </div>

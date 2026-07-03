@@ -89,20 +89,19 @@
   content: '';
 }
 
-.detail-main-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 24px;
-  margin-bottom: 24px;
-}
-
-.chart-card,
 .vehicle-card,
 .schedule-card {
   border: 1px solid #efe7f4;
   border-radius: 9px;
   background: #ffffff;
   box-shadow: 0 8px 18px rgba(60, 39, 96, 0.07);
+}
+
+.detail-main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+  margin-bottom: 24px;
 }
 
 .section-heading {
@@ -127,35 +126,6 @@
   font-weight: 600;
 }
 
-.chart-legend {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #2f2938;
-  font-size: 12px;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-.capital-dot,
-.interest-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
-
-.capital-dot {
-  background: var(--credit-primary);
-}
-
-.interest-dot {
-  background: #8a6a00;
-}
-
-.trend-chart {
-  width: 100%;
-  min-height: 270px;
-}
 
 .trend-chart line {
   stroke: #f0eaf5;
@@ -173,14 +143,6 @@
   stroke-width: 4;
   stroke-linecap: round;
   stroke-linejoin: round;
-}
-
-.capital-line {
-  stroke: var(--credit-primary);
-}
-
-.interest-line {
-  stroke: #8a6a00;
 }
 
 .vehicle-card {
@@ -396,6 +358,58 @@
   font-weight: 900;
 }
 
-.schedule-table {
-  min-width: 1900px;
+.excel-like-schedule-table {
+  min-width: 1550px;
+}
+
+.excel-schedule-table {
+  min-width: 1950px;
+}
+
+.pg-cell {
+  text-align: center !important;
+  font-weight: 900 !important;
+  color: var(--credit-primary) !important;
+}
+
+.vehicle-only-grid {
+  grid-template-columns: 1fr;
+}
+
+.vehicle-only-grid .vehicle-card {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+}
+
+.vehicle-only-grid .vehicle-hero {
+  min-height: 100%;
+}
+
+.vehicle-only-grid .vehicle-hero img {
+  height: 100%;
+}
+
+.detail-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.export-excel-button {
+  height: 44px;
+  border-radius: 7px;
+  background: var(--credit-primary) !important;
+  color: #ffffff !important;
+  font-weight: 900;
+}
+
+@media (max-width: 760px) {
+  .detail-header-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .detail-header-actions button {
+    width: 100%;
+  }
 }

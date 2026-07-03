@@ -122,7 +122,7 @@
 
 .expense-row {
   display: grid;
-  grid-template-columns: 1.3fr 1fr 0.9fr 0.8fr 0.8fr 1.4fr auto;
+  grid-template-columns: 1.3fr 1fr 1fr 0.8fr 0.8fr 0.8fr 1.4fr auto;
   gap: 10px;
   align-items: start;
 }
@@ -459,4 +459,60 @@
 
 .expense-actions .add-expense-button {
   align-self: flex-start;
+}
+
+.excel-like-schedule-table {
+  min-width: 1500px;
+}
+
+.pg-cell {
+  text-align: center !important;
+  font-weight: 900 !important;
+  color: var(--credit-primary) !important;
+}
+
+.interest-cell {
+  color: #8a6a00 !important;
+  font-weight: 900 !important;
+}
+
+.payment-cell {
+  color: var(--credit-primary) !important;
+  font-weight: 900 !important;
+}
+
+.balloon-row {
+  background: #fff8e7;
+}
+
+.balloon-row td {
+  font-weight: 900;
+}
+
+.excel-schedule-table {
+  min-width: 1850px;
+}
+
+.pg-cell {
+  text-align: center !important;
+  color: var(--credit-primary) !important;
+  font-weight: 900 !important;
+}
+
+.interest-cell {
+  color: #8a6a00 !important;
+  font-weight: 900 !important;
+}
+
+.payment-cell {
+  color: var(--credit-primary) !important;
+  font-weight: 900 !important;
+}
+
+.balloon-row {
+  background: #fff8e7;
+}
+
+.balloon-row td {
+  font-weight: 900;
 }
