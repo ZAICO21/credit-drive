@@ -145,6 +145,8 @@ export class SimulationForm {
   readonly additionalExpenses = this.fb.array<ExpenseGroup>([]);
 
   private readonly defaultsApplied = signal(false);
+  private readonly selectedVehicleOriginalPrice = signal(0);
+  private readonly selectedVehicleOriginalCurrency = signal<CurrencyCode>('PEN');
 
   readonly form = this.fb.nonNullable.group({
     clientId: ['', Validators.required],
@@ -153,6 +155,7 @@ export class SimulationForm {
     vehiclePrice: [0, [Validators.required, Validators.min(0)]],
     currency: ['PEN' as CurrencyCode, Validators.required],
     currencyCatalogId: [''],
+    exchangeRateUsdPen: [3.41, [Validators.required, Validators.min(0.0001)]],
 
     initialFeePercentage: [20, [Validators.required, Validators.min(0), Validators.max(100)]],
 
@@ -213,6 +216,10 @@ export class SimulationForm {
 
       this.form.patchValue({
         currencyCatalogId: setting.defaultCurrencyCatalogId,
+        exchangeRateUsdPen:
+          setting.defaultChangeUsdPen > 0
+            ? setting.defaultChangeUsdPen
+            : this.form.controls.exchangeRateUsdPen.value,
         rateType: setting.defaultInterestType,
         capitalization: setting.defaultCapitalization,
         totalGracePeriods: setting.defaultTotalGracePeriods,
@@ -231,6 +238,14 @@ export class SimulationForm {
     this.form.controls.vehicleId.valueChanges
       .pipe(takeUntilDestroyed())
       .subscribe((vehicleId) => this.onVehicleChange(vehicleId));
+
+    this.form.controls.currency.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.updateVehiclePriceBySelectedCurrency());
+
+    this.form.controls.exchangeRateUsdPen.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.updateVehiclePriceBySelectedCurrency());
 
     this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.result.set(null));
   }
@@ -298,12 +313,67 @@ export class SimulationForm {
     }
 
     const catalog = this.vehicleStore.getCurrencyCatalogById(vehicle.currencyCatalogId)();
+    const originalCurrency = ((catalog?.currency as CurrencyCode) ?? 'PEN') as CurrencyCode;
+
+    this.selectedVehicleOriginalPrice.set(vehicle.price);
+    this.selectedVehicleOriginalCurrency.set(originalCurrency);
 
     this.form.patchValue({
-      vehiclePrice: vehicle.price,
       currencyCatalogId: vehicle.currencyCatalogId,
-      currency: (catalog?.currency as CurrencyCode) ?? this.form.controls.currency.value,
+      currency: originalCurrency,
     });
+
+    this.updateVehiclePriceBySelectedCurrency();
+  }
+
+  private updateVehiclePriceBySelectedCurrency(): void {
+    const originalPrice = this.selectedVehicleOriginalPrice();
+    const originalCurrency = this.selectedVehicleOriginalCurrency();
+
+    if (originalPrice <= 0) {
+      return;
+    }
+
+    const targetCurrency = this.form.controls.currency.value;
+    const exchangeRate = Number(this.form.controls.exchangeRateUsdPen.value ?? 0);
+
+    if (exchangeRate <= 0) {
+      return;
+    }
+
+    const convertedPrice = this.convertCurrency(
+      originalPrice,
+      originalCurrency,
+      targetCurrency,
+      exchangeRate,
+    );
+
+    this.form.controls.vehiclePrice.setValue(this.roundMoney(convertedPrice));
+  }
+
+  private convertCurrency(
+    amount: number,
+    fromCurrency: CurrencyCode,
+    toCurrency: CurrencyCode,
+    exchangeRateUsdPen: number,
+  ): number {
+    if (fromCurrency === toCurrency) {
+      return amount;
+    }
+
+    if (fromCurrency === 'PEN' && toCurrency === 'USD') {
+      return amount / exchangeRateUsdPen;
+    }
+
+    if (fromCurrency === 'USD' && toCurrency === 'PEN') {
+      return amount * exchangeRateUsdPen;
+    }
+
+    return amount;
+  }
+
+  private roundMoney(value: number): number {
+    return Math.round((value + Number.EPSILON) * 100) / 100;
   }
 
   addExpense(): void {
@@ -562,6 +632,7 @@ export class SimulationForm {
 
       currency: value.currency,
       currencyCatalogId: value.currencyCatalogId || null,
+      exchangeRateUsdPen: value.exchangeRateUsdPen,
 
       disbursementDate: value.disbursementDate,
 

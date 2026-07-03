@@ -48,6 +48,25 @@
             </mat-form-field>
 
             <mat-form-field appearance="outline">
+              <mat-label>Tipo de cambio USD/PEN</mat-label>
+              <input
+                matInput
+                type="number"
+                formControlName="exchangeRateUsdPen"
+                step="0.0001" />
+
+              <mat-hint>1 USD = 3.41 PEN</mat-hint>
+
+              @if (form.controls.exchangeRateUsdPen.hasError('required')) {
+              <mat-error>El tipo de cambio es obligatorio.</mat-error>
+              }
+
+              @if (form.controls.exchangeRateUsdPen.hasError('min')) {
+              <mat-error>El tipo de cambio debe ser mayor a 0.</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
               <mat-label>Fecha de desembolso</mat-label>
               <input matInput type="date" formControlName="disbursementDate" />
               @if (form.controls.disbursementDate.hasError('required')) {
