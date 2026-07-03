@@ -5,6 +5,7 @@ import {iamGuard} from './iam/infrastructure/iam.guard';
 const dashboard = () => import('./shared/presentation/views/dashboard/dashboard').then(m => m.Dashboard);
 const home = () => import('./shared/presentation/views/home/home').then(m => m.Home);
 const about = () => import('./shared/presentation/views/about/about').then(m => m.About);
+const settings = () => import('./iam/presentation/views/settings/settings').then(m => m.Settings);
 const pageNotFound = () => import('./shared/presentation/views/page-not-found/page-not-found').then(m => m.PageNotFound);
 
 const iamRoutes = () => import('./iam/presentation/iam.routes').then(m => m.iamRoutes);
@@ -42,6 +43,7 @@ export const routes: Routes = [
       {path: 'vehicles', loadChildren: vehicleRoutes},
       {path: 'simulator', loadChildren: simulatorRoutes},
       {path: 'simulations', loadChildren: simulationsRoutes},
+      {path: 'settings', loadComponent: settings, title: `${baseTitle} - Configuración`},
 
       {path: '', redirectTo: 'dashboard', pathMatch: 'full'},
       {path: '**', loadComponent: pageNotFound, title: `${baseTitle} - No encontrado`}

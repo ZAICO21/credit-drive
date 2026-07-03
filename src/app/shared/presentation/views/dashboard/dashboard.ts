@@ -9,6 +9,7 @@ import {MatTooltipModule} from '@angular/material/tooltip';
 import {ClientStore} from '../../../../client-management/application/client.store';
 import {CreditSimulationStore} from '../../../../credit-simulation/application/credit-simulation.store';
 import {VehicleStore} from '../../../../vehicle-management/application/vehicle.store';
+import {IamStore} from '../../../../iam/application/iam.store';
 
 interface Kpi {
   label: string;
@@ -38,6 +39,10 @@ export class Dashboard {
   private readonly simulationStore = inject(CreditSimulationStore);
   private readonly clientStore = inject(ClientStore);
   private readonly vehicleStore = inject(VehicleStore);
+  private readonly iamStore = inject(IamStore);
+
+  /** First name of the currently authenticated user, for the welcome message. */
+  protected readonly currentUserName = computed(() => this.iamStore.currentUser()?.name ?? '');
 
   protected readonly kpis = computed<Kpi[]>(() => [
     {

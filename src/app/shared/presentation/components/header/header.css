@@ -13,7 +13,10 @@
 }
 
 .menu-button {
+  display: none;
   color: var(--credit-primary);
+  margin-left: 0;
+  margin-right: 16px;
 }
 
 .app-header-search {
@@ -41,14 +44,10 @@
   flex: 1 1 auto;
 }
 
-.header-icon {
-  color: var(--credit-primary);
-}
-
-.header-divider {
-  width: 1px;
-  height: 28px;
-  background: var(--credit-border);
+@media (max-width: 820px) {
+  .menu-button {
+    display: inline-flex;
+  }
 }
 
 @media (max-width: 720px) {
