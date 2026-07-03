@@ -612,6 +612,61 @@ export class SimulationForm {
         return 'simulation.period-normal';
     }
   }
+  pgLabel(periodType: PeriodType, cashFlowType: string): string {
+    if (cashFlowType === 'BALLOON') {
+      return 'S';
+    }
+
+    switch (periodType) {
+      case 'GRACIA_TOTAL':
+        return 'T';
+      case 'GRACIA_PARCIAL':
+        return 'P';
+      default:
+        return 'S';
+    }
+  }
+
+  excelInitialBalance(period: {
+    initialRegularBalance: number;
+    initialFinalQuotaBalance: number;
+  }): number {
+    return period.initialRegularBalance + period.initialFinalQuotaBalance;
+  }
+
+  excelInterest(period: { regularInterest: number; finalQuotaInterest: number }): number {
+    return period.regularInterest + period.finalQuotaInterest;
+  }
+
+  excelDesgravamen(period: { regularDesgravamen: number; finalQuotaDesgravamen: number }): number {
+    return period.regularDesgravamen + period.finalQuotaDesgravamen;
+  }
+
+  excelQuota(period: {
+    regularQuota: number;
+    balloonPayment: number;
+    cashFlowType: string;
+  }): number {
+    if (period.cashFlowType === 'BALLOON') {
+      return 0;
+    }
+
+    return period.regularQuota;
+  }
+
+  excelAmortization(period: {
+    regularAmortization: number;
+    finalQuotaAmortization: number;
+  }): number {
+    return period.regularAmortization + period.finalQuotaAmortization;
+  }
+
+  excelFinalBalance(period: {
+    finalRegularBalance: number;
+    finalFinalQuotaBalance: number;
+  }): number {
+    return period.finalRegularBalance + period.finalFinalQuotaBalance;
+  }
 
   cashFlowTypeLabel(cashFlowType: string): string {
     return cashFlowType === 'BALLOON' ? 'Cuotón final' : 'Cuota';

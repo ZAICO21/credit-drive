@@ -23,7 +23,8 @@
     "@ngx-translate/http-loader": "^17.0.0",
     "@supabase/supabase-js": "^2.108.2",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@angular/build": "^21.2.12",
