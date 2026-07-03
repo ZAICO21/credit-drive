@@ -87,20 +87,4 @@
     </mat-card-content>
   </mat-card>
 
-  <mat-card class="goal-card">
-    <mat-card-content>
-      <h2>{{ 'dashboard.goal.title' | translate }}</h2>
-      <div class="goal-ring"
-           [style.background]="'conic-gradient(#efe8ff ' + goalProgressPercent() + '%, rgba(255,255,255,0.24) 0)'">
-        <span>{{ goalProgressPercent() }}%</span>
-      </div>
-      <p>
-        {{ 'dashboard.goal.remaining-prefix' | translate }}
-        {{ goalRemaining() | number: '1.2-2' }}
-        {{ 'dashboard.goal.remaining-middle' | translate }}
-        {{ monthlyGoal | number: '1.2-2' }}
-      </p>
-      <a mat-flat-button routerLink="/simulations">{{ 'dashboard.goal.action' | translate }}</a>
-    </mat-card-content>
-  </mat-card>
 </section>
