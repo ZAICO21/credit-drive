@@ -1,24 +1,15 @@
 ﻿<mat-toolbar class="app-header">
-  <button mat-icon-button class="menu-button" (click)="menuToggle.emit()" aria-label="toggle menu">
-    <mat-icon>menu</mat-icon>
+  <button
+    mat-icon-button
+    type="button"
+    class="menu-button"
+    [attr.aria-label]="'header.toggle-menu' | translate"
+    (click)="menuToggle.emit()"
+  >
+    <mat-icon aria-hidden="true">menu</mat-icon>
   </button>
-
-  <mat-form-field class="app-header-search" appearance="outline" subscriptSizing="dynamic">
-    <mat-icon matPrefix>search</mat-icon>
-    <input matInput [placeholder]="'header.search' | translate" />
-  </mat-form-field>
 
   <span class="app-header-spacer"></span>
-
-  <button mat-icon-button class="header-icon" aria-label="notifications">
-    <mat-icon matBadge="1" matBadgeSize="small" matBadgeColor="warn">notifications</mat-icon>
-  </button>
-
-  <button mat-icon-button class="header-icon" aria-label="help">
-    <mat-icon>help_outline</mat-icon>
-  </button>
-
-  <span class="header-divider"></span>
 
   <app-language-switcher/>
 </mat-toolbar>
