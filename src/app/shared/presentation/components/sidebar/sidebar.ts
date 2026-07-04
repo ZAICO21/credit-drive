@@ -22,11 +22,11 @@ interface NavOption {
     MatListModule,
     MatIconModule,
     MatButtonModule,
-    MatTooltipModule
+    MatTooltipModule,
   ],
-  host: {'[class.collapsed]': 'collapsed'},
+  host: { '[class.collapsed]': 'collapsed' },
   templateUrl: './sidebar.html',
-  styleUrl: './sidebar.css'
+  styleUrl: './sidebar.css',
 })
 export class Sidebar {
   /** Whether the desktop rail is collapsed to icon-only mode. */
@@ -38,11 +38,13 @@ export class Sidebar {
   protected readonly iamStore = inject(IamStore);
 
   readonly options = signal<NavOption[]>([
-    {link: '/dashboard', label: 'sidebar.dashboard', icon: 'dashboard'},
-    {link: '/clients', label: 'sidebar.clients', icon: 'groups'},
-    {link: '/vehicles', label: 'sidebar.vehicles', icon: 'directions_car'},
-    {link: '/simulator', label: 'sidebar.simulator', icon: 'calculate'},
-    {link: '/simulations', label: 'sidebar.simulations', icon: 'insert_chart'}
+    { link: '/dashboard', label: 'sidebar.dashboard', icon: 'dashboard' },
+    { link: '/clients', label: 'sidebar.clients', icon: 'groups' },
+    { link: '/vehicles', label: 'sidebar.vehicles', icon: 'directions_car' },
+    { link: '/simulator', label: 'sidebar.simulator', icon: 'calculate' },
+    { link: '/simulations', label: 'sidebar.simulations', icon: 'insert_chart' },
+    { link: '/help', label: 'sidebar.help', icon: 'help_outline' },
+    { link: '/guide', label: 'sidebar.guide', icon: 'menu_book' },
   ]);
 
   performSignOut(): void {

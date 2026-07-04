@@ -27,7 +27,7 @@
           </h3>
 
           <div class="form-grid">
-            <mat-form-field appearance="outline">
+            <mat-form-field appearance="outline" floatLabel="always">
               <mat-label>{{ 'simulation.client' | translate }}</mat-label>
               <mat-select formControlName="clientId">
                 @for (client of clientStore.clients(); track client.id) {
@@ -81,7 +81,7 @@
           </h3>
 
           <div class="form-grid">
-            <mat-form-field appearance="outline">
+            <mat-form-field appearance="outline" floatLabel="always">
               <mat-label>{{ 'simulation.vehicle' | translate }}</mat-label>
               <mat-select formControlName="vehicleId">
                 @for (vehicle of vehicleStore.vehicles(); track vehicle.id) {
@@ -192,13 +192,15 @@
               <input matInput type="number" formControlName="paymentFrequencyDays" />
             </mat-form-field>
 
-            <mat-form-field appearance="outline">
+            <mat-form-field appearance="outline" floatLabel="always" class="readonly-field">
               <mat-label>Días por año</mat-label>
-              <mat-select formControlName="daysPerYear">
-                <mat-option [value]="360">360</mat-option>
-                <mat-option [value]="365">365</mat-option>
-              </mat-select>
+              <input
+                matInput
+                type="number"
+                formControlName="daysPerYear"
+                readonly />
             </mat-form-field>
+
           </div>
 
           <h3 class="simulation-section-title">
@@ -314,7 +316,7 @@
               </mat-form-field>
               }
 
-              <mat-form-field appearance="outline" class="expense-description-field">
+              <mat-form-field appearance="outline" class="expense-description-field" floatLabel="always">
                 <mat-label>{{ 'simulation.expense-description' | translate }}</mat-label>
                 <input matInput formControlName="description" />
               </mat-form-field>

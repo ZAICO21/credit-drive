@@ -158,15 +158,15 @@ export class SimulationForm {
     currencyCatalogId: [''],
     exchangeRateUsdPen: [3.41, [Validators.required, Validators.min(0.0001)]],
 
-    initialFeePercentage: [20, [Validators.required, Validators.min(0), Validators.max(100)]],
+    initialFeePercentage: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
 
-    termMonths: [36, [Validators.required, Validators.min(1)]],
+    termMonths: [0, [Validators.required, Validators.min(1)]],
 
     /**
      * UI name aligned with Excel.
      * We still pass it also as futureValuePercentage for compatibility.
      */
-    finalQuotaPercentage: [30, [Validators.required, Validators.min(0), Validators.max(100)]],
+    finalQuotaPercentage: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
 
     rateType: ['EFECTIVA' as RateType, Validators.required],
     ratePeriod: ['ANUAL' as RatePeriodType, Validators.required],
