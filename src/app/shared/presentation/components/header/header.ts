@@ -6,7 +6,6 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatBadgeModule} from '@angular/material/badge';
-import {LanguageSwitcher} from '../language-switcher/language-switcher';
 
 @Component({
   selector: 'app-header',
@@ -17,8 +16,7 @@ import {LanguageSwitcher} from '../language-switcher/language-switcher';
     MatIconModule,
     MatFormFieldModule,
     MatInputModule,
-    MatBadgeModule,
-    LanguageSwitcher
+    MatBadgeModule
   ],
   templateUrl: './header.html',
   styleUrl: './header.css'

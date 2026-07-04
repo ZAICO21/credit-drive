@@ -89,7 +89,7 @@
 
 <section class="detail-main-grid vehicle-only-grid">
 
-  <aside class="vehicle-card">
+  <aside class="vehicle-card centered-vehicle-card">
     <div class="vehicle-hero">
       @if (vehicleImageUrl(s.vehicleId); as imageUrl) {
       <img [src]="imageUrl" [alt]="vehicleName(s.vehicleId)" />
@@ -99,12 +99,12 @@
     </div>
 
     <div class="vehicle-content">
-      <h2>{{ 'simulation.vehicle-detail' | translate }}</h2>
+      <h2>Detalle del Vehículo</h2>
       <p>{{ vehicleName(s.vehicleId) }}</p>
 
       <dl>
         <div>
-          <dt>{{ 'simulation.vehicle-price' | translate }}</dt>
+          <dt>Precio del vehículo</dt>
           <dd>{{ s.vehiclePrice | number: '1.2-2' }} {{ s.currency }}</dd>
         </div>
 
@@ -119,7 +119,7 @@
         </div>
 
         <div>
-          <dt>{{ 'simulation.initial-fee-amount' | translate }}</dt>
+          <dt>Cuota inicial</dt>
           <dd>{{ s.initialFeeAmount | number: '1.2-2' }}</dd>
         </div>
 
@@ -134,22 +134,23 @@
         </div>
 
         <div>
-          <dt>{{ 'simulation.total-insurance' | translate }}</dt>
+          <dt>Seguro total</dt>
           <dd>{{ totalInsurance() | number: '1.2-2' }}</dd>
         </div>
 
         <div>
-          <dt>{{ 'simulation.total-portes' | translate }}</dt>
+          <dt>Portes totales</dt>
           <dd>{{ totalPortes() | number: '1.2-2' }}</dd>
         </div>
 
-        <div>
+        <div class="vehicle-total-row">
           <dt>Pago total</dt>
           <dd>{{ totalPayments() | number: '1.2-2' }}</dd>
         </div>
       </dl>
     </div>
   </aside>
+
 </section>
 
 <section class="kpi-grid secondary-kpi-grid">
@@ -279,10 +280,6 @@
   </button>
 
   <div class="detail-header-actions">
-    <button mat-stroked-button class="export-pdf-button" type="button" (click)="exportPdf()">
-      <mat-icon>picture_as_pdf</mat-icon>
-      {{ 'simulation.export-pdf' | translate }}
-    </button>
 
     <button mat-flat-button class="export-excel-button" type="button" (click)="exportScheduleExcel()">
       <mat-icon>table_chart</mat-icon>

@@ -147,6 +147,7 @@ export class SimulationForm {
   private readonly defaultsApplied = signal(false);
   private readonly selectedVehicleOriginalPrice = signal(0);
   private readonly selectedVehicleOriginalCurrency = signal<CurrencyCode>('PEN');
+  private readonly lastSelectedSimulationCurrency = signal<CurrencyCode>('PEN');
 
   readonly form = this.fb.nonNullable.group({
     clientId: ['', Validators.required],
@@ -157,15 +158,15 @@ export class SimulationForm {
     currencyCatalogId: [''],
     exchangeRateUsdPen: [3.41, [Validators.required, Validators.min(0.0001)]],
 
-    initialFeePercentage: [20, [Validators.required, Validators.min(0), Validators.max(100)]],
+    initialFeePercentage: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
 
-    termMonths: [36, [Validators.required, Validators.min(1)]],
+    termMonths: [0, [Validators.required, Validators.min(1)]],
 
     /**
      * UI name aligned with Excel.
      * We still pass it also as futureValuePercentage for compatibility.
      */
-    finalQuotaPercentage: [30, [Validators.required, Validators.min(0), Validators.max(100)]],
+    finalQuotaPercentage: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
 
     rateType: ['EFECTIVA' as RateType, Validators.required],
     ratePeriod: ['ANUAL' as RatePeriodType, Validators.required],
@@ -241,7 +242,7 @@ export class SimulationForm {
 
     this.form.controls.currency.valueChanges
       .pipe(takeUntilDestroyed())
-      .subscribe(() => this.updateVehiclePriceBySelectedCurrency());
+      .subscribe((currency) => this.onSimulationCurrencyChange(currency));
 
     this.form.controls.exchangeRateUsdPen.valueChanges
       .pipe(takeUntilDestroyed())
@@ -317,6 +318,7 @@ export class SimulationForm {
 
     this.selectedVehicleOriginalPrice.set(vehicle.price);
     this.selectedVehicleOriginalCurrency.set(originalCurrency);
+    this.lastSelectedSimulationCurrency.set(originalCurrency);
 
     this.form.patchValue({
       currencyCatalogId: vehicle.currencyCatalogId,
@@ -324,6 +326,73 @@ export class SimulationForm {
     });
 
     this.updateVehiclePriceBySelectedCurrency();
+  }
+
+  private onSimulationCurrencyChange(targetCurrency: CurrencyCode): void {
+    const fromCurrency = this.lastSelectedSimulationCurrency();
+
+    if (fromCurrency === targetCurrency) {
+      this.updateVehiclePriceBySelectedCurrency();
+      return;
+    }
+
+    const exchangeRate = Number(this.form.controls.exchangeRateUsdPen.value ?? 0);
+
+    if (exchangeRate <= 0) {
+      return;
+    }
+
+    this.convertCurrentMonetaryInputs(fromCurrency, targetCurrency, exchangeRate);
+    this.lastSelectedSimulationCurrency.set(targetCurrency);
+
+    /**
+     * El precio del vehículo se recalcula desde el precio original del vehículo,
+     * no desde el valor actual, para evitar arrastre de redondeos.
+     */
+    this.updateVehiclePriceBySelectedCurrency();
+  }
+
+  private convertCurrentMonetaryInputs(
+    fromCurrency: CurrencyCode,
+    toCurrency: CurrencyCode,
+    exchangeRateUsdPen: number,
+  ): void {
+    if (fromCurrency === toCurrency) {
+      return;
+    }
+
+    const convertAmount = (amount: number): number =>
+      this.roundMoney(this.convertCurrency(amount, fromCurrency, toCurrency, exchangeRateUsdPen));
+
+    this.form.controls.gps.setValue(convertAmount(Number(this.form.controls.gps.value ?? 0)), {
+      emitEvent: false,
+    });
+
+    this.form.controls.portes.setValue(
+      convertAmount(Number(this.form.controls.portes.value ?? 0)),
+      { emitEvent: false },
+    );
+
+    this.form.controls.administrativeExpenses.setValue(
+      convertAmount(Number(this.form.controls.administrativeExpenses.value ?? 0)),
+      { emitEvent: false },
+    );
+
+    this.additionalExpenses.controls.forEach((group) => {
+      /**
+       * Solo se convierten montos fijos.
+       * Si más adelante usas gastos porcentuales, esos no deben convertirse.
+       */
+      if (group.controls.amountType.value !== 'FIXED') {
+        return;
+      }
+
+      group.controls.amount.setValue(convertAmount(Number(group.controls.amount.value ?? 0)), {
+        emitEvent: false,
+      });
+    });
+
+    this.result.set(null);
   }
 
   private updateVehiclePriceBySelectedCurrency(): void {
