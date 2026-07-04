@@ -122,3 +122,18 @@
     padding: 42px 24px 34px;
   }
 }
+
+.sign-in-header {
+  display: block;
+  padding: 0;
+  margin-bottom: 34px;
+}
+
+.sign-in-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+

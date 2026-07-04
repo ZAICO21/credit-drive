@@ -31,6 +31,14 @@
   </article>
 
   <article class="kpi-card">
+    <span>Tasa de descuento</span>
+    <strong>{{ discountRatePeriod() | percent: '1.2-4' }}</strong>
+    <small>
+      COK {{ discountRateAnnual() | percent: '1.2-4' }} convertido a {{ s.paymentFrequencyDays }} días
+    </small>
+  </article>
+
+  <article class="kpi-card">
     <span>{{ 'simulation.interest-rate' | translate }}</span>
     <strong>{{ s.interestRate | number: '1.2-2' }}%</strong>
     <small>{{ s.rateType }}</small>

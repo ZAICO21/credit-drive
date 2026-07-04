@@ -263,4 +263,37 @@ export class SimulationDetail {
     return entry.finalRegularBalance + entry.finalFinalQuotaBalance;
   }
 
+  discountRateAnnual(): number {
+    const simulation = this.simulation();
+
+    if (!simulation) {
+      return 0;
+    }
+
+    const opportunityRate = simulation.opportunityRate ?? 0;
+
+    /**
+     * Si viene como 50, lo convertimos a 0.50.
+     * Si ya viene como 0.50, lo dejamos igual.
+     */
+    return opportunityRate > 1 ? opportunityRate / 100 : opportunityRate;
+  }
+
+  discountRatePeriod(): number {
+    const simulation = this.simulation();
+
+    if (!simulation) {
+      return 0;
+    }
+
+    const cok = this.discountRateAnnual();
+    const paymentFrequencyDays = simulation.paymentFrequencyDays ?? 30;
+    const daysPerYear = simulation.daysPerYear ?? 360;
+
+    if (cok <= 0 || paymentFrequencyDays <= 0 || daysPerYear <= 0) {
+      return 0;
+    }
+
+    return Math.pow(1 + cok, paymentFrequencyDays / daysPerYear) - 1;
+  }
 }

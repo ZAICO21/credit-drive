@@ -245,76 +245,21 @@
           </div>
 
           <h3 class="simulation-section-title compact-title">
-            Gastos adicionales
+            Gastos iniciales financiados
           </h3>
 
           <div class="expense-rows" formArrayName="additionalExpenses">
             @for (group of additionalExpenses.controls; track $index; let i = $index) {
-            <div class="expense-row" [formGroupName]="i">
-              <mat-form-field appearance="outline">
+            <div class="expense-row initial-expense-row" [formGroupName]="i">
+              <mat-form-field appearance="outline" floatLabel="always">
                 <mat-label>{{ 'simulation.expense-concept' | translate }}</mat-label>
                 <input matInput formControlName="concept" />
               </mat-form-field>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Etapa</mat-label>
-                <mat-select formControlName="expenseStage" (selectionChange)="onExpenseStageChange(group)">
-                  <mat-option value="INITIAL">Inicial</mat-option>
-                  <mat-option value="PERIODIC">Periódico</mat-option>
-                </mat-select>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline">
-                <mat-label>Comportamiento</mat-label>
-                <input
-                  matInput
-                  type="text"
-                  [value]="expenseBehaviorLabel(group)"
-                  readonly />
-              </mat-form-field>
-
-              <mat-form-field appearance="outline">
-                <mat-label>{{ 'simulation.expense-amount' | translate }}</mat-label>
+              <mat-form-field appearance="outline" floatLabel="always">
+                <mat-label>Monto financiado</mat-label>
                 <input matInput type="number" formControlName="amount" />
               </mat-form-field>
-
-              @if (group.controls.expenseStage.value === 'PERIODIC') {
-              <mat-form-field appearance="outline">
-                <mat-label>{{ 'simulation.expense-installment-start' | translate }}</mat-label>
-                <input
-                  matInput
-                  type="number"
-                  formControlName="installmentStart"
-                  min="1"
-                  [max]="maxExpensePeriod()"
-                  (input)="validateExpensePeriods()" />
-
-                @if (group.controls.installmentStart.hasError('invalidStartPeriod')) {
-                <mat-error>El periodo inicial debe ser mayor o igual a 1.</mat-error>
-                }
-              </mat-form-field>
-
-              <mat-form-field appearance="outline">
-                <mat-label>{{ 'simulation.expense-installment-end' | translate }}</mat-label>
-                <input
-                  matInput
-                  type="number"
-                  formControlName="installmentEnd"
-                  min="1"
-                  [max]="maxExpensePeriod()"
-                  (input)="validateExpensePeriods()" />
-
-                @if (group.controls.installmentEnd.hasError('invalidEndPeriod')) {
-                <mat-error>El periodo final debe ser mayor o igual al periodo inicial.</mat-error>
-                }
-
-                @if (group.controls.installmentEnd.hasError('maxExpensePeriodExceeded')) {
-                <mat-error>
-                  El periodo final no puede exceder {{ maxExpensePeriod() }}.
-                </mat-error>
-                }
-              </mat-form-field>
-              }
 
               <mat-form-field appearance="outline" class="expense-description-field" floatLabel="always">
                 <mat-label>{{ 'simulation.expense-description' | translate }}</mat-label>
@@ -324,7 +269,7 @@
               <button
                 mat-icon-button
                 type="button"
-                [attr.aria-label]="'simulation.remove-expense' | translate"
+                aria-label="Eliminar gasto inicial financiado"
                 (click)="removeExpense(i)">
                 <mat-icon>delete</mat-icon>
               </button>
@@ -332,12 +277,11 @@
             }
 
             <div class="expense-actions">
-              <button mat-stroked-button type="button" class="add-expense-button" (click)="addExpense()">
-                <mat-icon>add</mat-icon>
-                Agregar gasto periódico
-              </button>
-
-              <button mat-stroked-button type="button" class="add-expense-button" (click)="addInitialFinancedExpense()">
+              <button
+                mat-stroked-button
+                type="button"
+                class="add-expense-button"
+                (click)="addInitialFinancedExpense()">
                 <mat-icon>add</mat-icon>
                 Agregar gasto inicial financiado
               </button>
