@@ -87,39 +87,9 @@
   </article>
 </section>
 
-<section class="detail-main-grid">
-  <mat-card class="chart-card">
-    <mat-card-content>
-      <div class="section-heading">
-        <div>
-          <h2>{{ 'simulation.capital-interest-evolution' | translate }}</h2>
-          <p>{{ 'simulation.capital-interest-copy' | translate: {months: s.termMonths} }}</p>
-        </div>
+<section class="detail-main-grid vehicle-only-grid">
 
-        <div class="chart-legend">
-          <span class="capital-dot"></span>{{ 'simulation.capital' | translate }}
-          <span class="interest-dot"></span>{{ 'simulation.schedule-interest' | translate }}
-        </div>
-      </div>
-
-      <svg class="trend-chart" viewBox="0 0 600 230" role="img">
-        <line x1="20" y1="35" x2="580" y2="35"></line>
-        <line x1="20" y1="95" x2="580" y2="95"></line>
-        <line x1="20" y1="155" x2="580" y2="155"></line>
-        <line x1="20" y1="215" x2="580" y2="215"></line>
-
-        <polyline class="capital-line" [attr.points]="capitalLinePoints()"></polyline>
-        <polyline class="interest-line" [attr.points]="interestLinePoints()"></polyline>
-
-        <text x="20" y="226">0</text>
-        <text x="205" y="226">{{ s.termMonths / 3 | number: '1.0-0' }}</text>
-        <text x="390" y="226">{{ s.termMonths * 2 / 3 | number: '1.0-0' }}</text>
-        <text x="548" y="226">{{ s.termMonths + 1 }}</text>
-      </svg>
-    </mat-card-content>
-  </mat-card>
-
-  <aside class="vehicle-card">
+  <aside class="vehicle-card centered-vehicle-card">
     <div class="vehicle-hero">
       @if (vehicleImageUrl(s.vehicleId); as imageUrl) {
       <img [src]="imageUrl" [alt]="vehicleName(s.vehicleId)" />
@@ -129,17 +99,27 @@
     </div>
 
     <div class="vehicle-content">
-      <h2>{{ 'simulation.vehicle-detail' | translate }}</h2>
+      <h2>Detalle del Vehículo</h2>
       <p>{{ vehicleName(s.vehicleId) }}</p>
 
       <dl>
         <div>
-          <dt>{{ 'simulation.vehicle-price' | translate }}</dt>
+          <dt>Precio del vehículo</dt>
           <dd>{{ s.vehiclePrice | number: '1.2-2' }} {{ s.currency }}</dd>
         </div>
 
         <div>
-          <dt>{{ 'simulation.initial-fee-amount' | translate }}</dt>
+          <dt>Tipo de cambio USD/PEN</dt>
+          <dd>{{ s.exchangeRateUsdPen | number: '1.4-4' }}</dd>
+        </div>
+
+        <div>
+          <dt>Moneda de simulación</dt>
+          <dd>{{ s.currency }}</dd>
+        </div>
+
+        <div>
+          <dt>Cuota inicial</dt>
           <dd>{{ s.initialFeeAmount | number: '1.2-2' }}</dd>
         </div>
 
@@ -154,22 +134,23 @@
         </div>
 
         <div>
-          <dt>{{ 'simulation.total-insurance' | translate }}</dt>
+          <dt>Seguro total</dt>
           <dd>{{ totalInsurance() | number: '1.2-2' }}</dd>
         </div>
 
         <div>
-          <dt>{{ 'simulation.total-portes' | translate }}</dt>
+          <dt>Portes totales</dt>
           <dd>{{ totalPortes() | number: '1.2-2' }}</dd>
         </div>
 
-        <div>
+        <div class="vehicle-total-row">
           <dt>Pago total</dt>
           <dd>{{ totalPayments() | number: '1.2-2' }}</dd>
         </div>
       </dl>
     </div>
   </aside>
+
 </section>
 
 <section class="kpi-grid secondary-kpi-grid">
@@ -224,33 +205,35 @@
   </div>
 
   <div class="schedule-table-wrapper">
-    <table class="schedule-table">
+    <table class="schedule-table excel-schedule-table">
       <thead>
       <tr>
         <th>N°</th>
         <th>{{ 'simulation.schedule-date' | translate }}</th>
-        <th>Tipo periodo</th>
+        <th>PG</th>
         <th>Tipo flujo</th>
 
-        <th>Saldo regular inicial</th>
-        <th>Interés regular</th>
-        <th>Desgravamen regular</th>
-        <th>Cuota regular</th>
-        <th>Amortización regular</th>
-        <th>Saldo regular final</th>
+        <th>SICF</th>
+        <th>ICF</th>
+        <th>ACF</th>
+        <th>Seg. Des. CF</th>
+        <th>SFCF</th>
 
-        <th>Saldo cuotón inicial</th>
-        <th>Interés cuotón</th>
-        <th>Desgravamen cuotón</th>
-        <th>Saldo cuotón final</th>
+        <th>SI</th>
+        <th>I</th>
+        <th>Cuota</th>
+        <th>A</th>
+        <th>Seg. Des.</th>
+        <th>SF</th>
 
-        <th>Seguro riesgo</th>
+        <th>Seg. Riesgo</th>
         <th>GPS</th>
         <th>Portes</th>
         <th>Gastos adm.</th>
         <th>Otros gastos</th>
-        <th>Cuotón</th>
+        <th>Cuota final</th>
         <th>Pago total</th>
+        <th>Flujo caja</th>
       </tr>
       </thead>
 
@@ -259,20 +242,21 @@
       <tr [class.balloon-row]="entry.isBalloonPayment">
         <td>{{ entry.installmentNumber }}</td>
         <td>{{ entry.paymentDate }}</td>
-        <td>{{ periodLabelKey(entry.periodType) | translate }}</td>
+        <td class="pg-cell">{{ pgLabel(entry.periodType, entry.cashFlowType) }}</td>
         <td>{{ cashFlowTypeLabel(entry.cashFlowType) }}</td>
-
-        <td>{{ entry.initialRegularBalance | number: '1.2-2' }}</td>
-        <td class="interest-cell">{{ entry.regularInterest | number: '1.2-2' }}</td>
-        <td>{{ entry.regularDesgravamen | number: '1.2-2' }}</td>
-        <td>{{ entry.regularQuota | number: '1.2-2' }}</td>
-        <td>{{ entry.regularAmortization | number: '1.2-2' }}</td>
-        <td>{{ entry.finalRegularBalance | number: '1.2-2' }}</td>
 
         <td>{{ entry.initialFinalQuotaBalance | number: '1.2-2' }}</td>
         <td class="interest-cell">{{ entry.finalQuotaInterest | number: '1.2-2' }}</td>
+        <td>{{ entry.finalQuotaAmortization | number: '1.2-2' }}</td>
         <td>{{ entry.finalQuotaDesgravamen | number: '1.2-2' }}</td>
         <td>{{ entry.finalFinalQuotaBalance | number: '1.2-2' }}</td>
+
+        <td>{{ entry.initialRegularBalance | number: '1.2-2' }}</td>
+        <td class="interest-cell">{{ entry.regularInterest | number: '1.2-2' }}</td>
+        <td>{{ entry.regularQuota | number: '1.2-2' }}</td>
+        <td>{{ entry.regularAmortization | number: '1.2-2' }}</td>
+        <td>{{ entry.regularDesgravamen | number: '1.2-2' }}</td>
+        <td>{{ entry.finalRegularBalance | number: '1.2-2' }}</td>
 
         <td>{{ entry.riskInsurance | number: '1.2-2' }}</td>
         <td>{{ entry.gps | number: '1.2-2' }}</td>
@@ -281,11 +265,13 @@
         <td>{{ entry.otherExpenses | number: '1.2-2' }}</td>
         <td>{{ entry.balloonPayment | number: '1.2-2' }}</td>
         <td class="payment-cell">{{ entry.totalPayment | number: '1.2-2' }}</td>
+        <td>{{ entry.cashFlow | number: '1.2-2' }}</td>
       </tr>
       }
       </tbody>
     </table>
   </div>
+
 </section>
 
 <footer class="detail-actions">
@@ -293,9 +279,14 @@
     {{ 'simulation.back' | translate }}
   </button>
 
-  <button mat-flat-button class="save-button" type="button" (click)="exportPdf()">
-    {{ 'simulation.export-pdf' | translate }}
-  </button>
+  <div class="detail-header-actions">
+
+    <button mat-flat-button class="export-excel-button" type="button" (click)="exportScheduleExcel()">
+      <mat-icon>table_chart</mat-icon>
+      Descargar Excel
+    </button>
+  </div>
+
 </footer>
 } @else {
 <p>{{ 'simulation.not-found' | translate }}</p>

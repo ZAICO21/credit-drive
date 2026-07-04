@@ -2,6 +2,7 @@ import {
   CapitalizationType,
   CashFlowType,
   PeriodType,
+  RatePeriodType,
   RateType,
   SimulationExpenseInput,
 } from '../model/credit-simulation.types';
@@ -31,6 +32,7 @@ export interface CreditSimulationInput {
 
   rateType: RateType;
   interestRate: number;
+  ratePeriod?: RatePeriodType | null;
   capitalization?: CapitalizationType | null;
 
   paymentFrequencyDays?: number;
@@ -177,6 +179,7 @@ interface NormalizedSimulationInput {
   finalQuotaPercentage: number;
   rateType: RateType;
   interestRate: number;
+  ratePeriod: RatePeriodType;
   capitalization: CapitalizationType;
   paymentFrequencyDays: number;
   daysPerYear: number;
@@ -206,12 +209,9 @@ export class CreditSimulationService {
     const normalized = this.normalizeInput(input);
     this.validateInput(normalized);
 
-    const periodEffectiveRate = this.computeCreditPeriodRate(normalized);
-    const annualEffectiveRate = RateConversionService.periodToEffectiveAnnual(
-      periodEffectiveRate,
-      normalized.paymentFrequencyDays,
-      normalized.daysPerYear,
-    );
+    const creditRate = this.computeCreditRate(normalized);
+    const periodEffectiveRate = creditRate.periodEffectiveRate;
+    const annualEffectiveRate = creditRate.annualEffectiveRate;
 
     const opportunityPeriodRate = RateConversionService.effectiveAnnualToPeriod(
       normalized.opportunityTeaPercent,
@@ -303,6 +303,7 @@ export class CreditSimulationService {
       finalQuotaPercentage,
       rateType: input.rateType,
       interestRate: input.interestRate,
+      ratePeriod: input.ratePeriod ?? 'ANUAL',
       capitalization: input.capitalization ?? 'MENSUAL',
       paymentFrequencyDays,
       daysPerYear,
@@ -357,21 +358,18 @@ export class CreditSimulationService {
     }
   }
 
-  private static computeCreditPeriodRate(input: NormalizedSimulationInput): number {
-    if (input.rateType === 'NOMINAL') {
-      return RateConversionService.nominalAnnualToPeriod(
-        input.interestRate,
-        input.capitalization,
-        input.paymentFrequencyDays,
-        input.daysPerYear,
-      );
-    }
-
-    return RateConversionService.effectiveAnnualToPeriod(
-      input.interestRate,
-      input.paymentFrequencyDays,
-      input.daysPerYear,
-    );
+  private static computeCreditRate(input: NormalizedSimulationInput): {
+    periodEffectiveRate: number;
+    annualEffectiveRate: number;
+  } {
+    return RateConversionService.convertToEffectiveRates({
+      rateType: input.rateType,
+      rateValuePercent: input.interestRate,
+      ratePeriod: input.ratePeriod,
+      capitalization: input.rateType === 'NOMINAL' ? input.capitalization : null,
+      paymentFrequencyDays: input.paymentFrequencyDays,
+      daysPerYear: input.daysPerYear,
+    });
   }
 
   private static computeInitialCostsFinanced(expenses: SimulationExpenseInput[]): number {

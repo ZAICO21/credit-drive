@@ -30,6 +30,7 @@ import {
   ExpensePaymentBehavior,
   ExpenseStage,
   PeriodType,
+  RatePeriodType,
   RateType,
 } from '../../../domain/model/credit-simulation.types';
 
@@ -121,6 +122,15 @@ export class SimulationForm {
     'MENSUAL',
     'BIMESTRAL',
     'TRIMESTRAL',
+    'CUATRIMESTRAL',
+    'SEMESTRAL',
+    'ANUAL',
+  ];
+
+  protected readonly ratePeriodOptions: RatePeriodType[] = [
+    'MENSUAL',
+    'TRIMESTRAL',
+    'CUATRIMESTRAL',
     'SEMESTRAL',
     'ANUAL',
   ];
@@ -135,6 +145,9 @@ export class SimulationForm {
   readonly additionalExpenses = this.fb.array<ExpenseGroup>([]);
 
   private readonly defaultsApplied = signal(false);
+  private readonly selectedVehicleOriginalPrice = signal(0);
+  private readonly selectedVehicleOriginalCurrency = signal<CurrencyCode>('PEN');
+  private readonly lastSelectedSimulationCurrency = signal<CurrencyCode>('PEN');
 
   readonly form = this.fb.nonNullable.group({
     clientId: ['', Validators.required],
@@ -143,18 +156,20 @@ export class SimulationForm {
     vehiclePrice: [0, [Validators.required, Validators.min(0)]],
     currency: ['PEN' as CurrencyCode, Validators.required],
     currencyCatalogId: [''],
+    exchangeRateUsdPen: [3.41, [Validators.required, Validators.min(0.0001)]],
 
-    initialFeePercentage: [20, [Validators.required, Validators.min(0), Validators.max(100)]],
+    initialFeePercentage: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
 
-    termMonths: [36, [Validators.required, Validators.min(1)]],
+    termMonths: [0, [Validators.required, Validators.min(1)]],
 
     /**
      * UI name aligned with Excel.
      * We still pass it also as futureValuePercentage for compatibility.
      */
-    finalQuotaPercentage: [30, [Validators.required, Validators.min(0), Validators.max(100)]],
+    finalQuotaPercentage: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
 
     rateType: ['EFECTIVA' as RateType, Validators.required],
+    ratePeriod: ['ANUAL' as RatePeriodType, Validators.required],
     interestRate: [0, [Validators.required, Validators.min(0)]],
     capitalization: ['MENSUAL' as CapitalizationType, Validators.required],
 
@@ -202,6 +217,10 @@ export class SimulationForm {
 
       this.form.patchValue({
         currencyCatalogId: setting.defaultCurrencyCatalogId,
+        exchangeRateUsdPen:
+          setting.defaultChangeUsdPen > 0
+            ? setting.defaultChangeUsdPen
+            : this.form.controls.exchangeRateUsdPen.value,
         rateType: setting.defaultInterestType,
         capitalization: setting.defaultCapitalization,
         totalGracePeriods: setting.defaultTotalGracePeriods,
@@ -221,7 +240,51 @@ export class SimulationForm {
       .pipe(takeUntilDestroyed())
       .subscribe((vehicleId) => this.onVehicleChange(vehicleId));
 
+    this.form.controls.currency.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((currency) => this.onSimulationCurrencyChange(currency));
+
+    this.form.controls.exchangeRateUsdPen.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.updateVehiclePriceBySelectedCurrency());
+
     this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.result.set(null));
+  }
+
+  protected ratePeriodLabel(period: RatePeriodType): string {
+    switch (period) {
+      case 'MENSUAL':
+        return 'Mensual';
+      case 'TRIMESTRAL':
+        return 'Trimestral';
+      case 'CUATRIMESTRAL':
+        return 'Cuatrimestral';
+      case 'SEMESTRAL':
+        return 'Semestral';
+      case 'ANUAL':
+        return 'Anual';
+    }
+  }
+
+  protected capitalizationLabel(capitalization: CapitalizationType): string {
+    switch (capitalization) {
+      case 'DIARIA':
+        return 'Diaria';
+      case 'QUINCENAL':
+        return 'Quincenal';
+      case 'MENSUAL':
+        return 'Mensual';
+      case 'BIMESTRAL':
+        return 'Bimestral';
+      case 'TRIMESTRAL':
+        return 'Trimestral';
+      case 'CUATRIMESTRAL':
+        return 'Cuatrimestral';
+      case 'SEMESTRAL':
+        return 'Semestral';
+      case 'ANUAL':
+        return 'Anual';
+    }
   }
 
   private todayIso(): string {
@@ -251,12 +314,135 @@ export class SimulationForm {
     }
 
     const catalog = this.vehicleStore.getCurrencyCatalogById(vehicle.currencyCatalogId)();
+    const originalCurrency = ((catalog?.currency as CurrencyCode) ?? 'PEN') as CurrencyCode;
+
+    this.selectedVehicleOriginalPrice.set(vehicle.price);
+    this.selectedVehicleOriginalCurrency.set(originalCurrency);
+    this.lastSelectedSimulationCurrency.set(originalCurrency);
 
     this.form.patchValue({
-      vehiclePrice: vehicle.price,
       currencyCatalogId: vehicle.currencyCatalogId,
-      currency: (catalog?.currency as CurrencyCode) ?? this.form.controls.currency.value,
+      currency: originalCurrency,
     });
+
+    this.updateVehiclePriceBySelectedCurrency();
+  }
+
+  private onSimulationCurrencyChange(targetCurrency: CurrencyCode): void {
+    const fromCurrency = this.lastSelectedSimulationCurrency();
+
+    if (fromCurrency === targetCurrency) {
+      this.updateVehiclePriceBySelectedCurrency();
+      return;
+    }
+
+    const exchangeRate = Number(this.form.controls.exchangeRateUsdPen.value ?? 0);
+
+    if (exchangeRate <= 0) {
+      return;
+    }
+
+    this.convertCurrentMonetaryInputs(fromCurrency, targetCurrency, exchangeRate);
+    this.lastSelectedSimulationCurrency.set(targetCurrency);
+
+    /**
+     * El precio del vehículo se recalcula desde el precio original del vehículo,
+     * no desde el valor actual, para evitar arrastre de redondeos.
+     */
+    this.updateVehiclePriceBySelectedCurrency();
+  }
+
+  private convertCurrentMonetaryInputs(
+    fromCurrency: CurrencyCode,
+    toCurrency: CurrencyCode,
+    exchangeRateUsdPen: number,
+  ): void {
+    if (fromCurrency === toCurrency) {
+      return;
+    }
+
+    const convertAmount = (amount: number): number =>
+      this.roundMoney(this.convertCurrency(amount, fromCurrency, toCurrency, exchangeRateUsdPen));
+
+    this.form.controls.gps.setValue(convertAmount(Number(this.form.controls.gps.value ?? 0)), {
+      emitEvent: false,
+    });
+
+    this.form.controls.portes.setValue(
+      convertAmount(Number(this.form.controls.portes.value ?? 0)),
+      { emitEvent: false },
+    );
+
+    this.form.controls.administrativeExpenses.setValue(
+      convertAmount(Number(this.form.controls.administrativeExpenses.value ?? 0)),
+      { emitEvent: false },
+    );
+
+    this.additionalExpenses.controls.forEach((group) => {
+      /**
+       * Solo se convierten montos fijos.
+       * Si más adelante usas gastos porcentuales, esos no deben convertirse.
+       */
+      if (group.controls.amountType.value !== 'FIXED') {
+        return;
+      }
+
+      group.controls.amount.setValue(convertAmount(Number(group.controls.amount.value ?? 0)), {
+        emitEvent: false,
+      });
+    });
+
+    this.result.set(null);
+  }
+
+  private updateVehiclePriceBySelectedCurrency(): void {
+    const originalPrice = this.selectedVehicleOriginalPrice();
+    const originalCurrency = this.selectedVehicleOriginalCurrency();
+
+    if (originalPrice <= 0) {
+      return;
+    }
+
+    const targetCurrency = this.form.controls.currency.value;
+    const exchangeRate = Number(this.form.controls.exchangeRateUsdPen.value ?? 0);
+
+    if (exchangeRate <= 0) {
+      return;
+    }
+
+    const convertedPrice = this.convertCurrency(
+      originalPrice,
+      originalCurrency,
+      targetCurrency,
+      exchangeRate,
+    );
+
+    this.form.controls.vehiclePrice.setValue(this.roundMoney(convertedPrice));
+  }
+
+  private convertCurrency(
+    amount: number,
+    fromCurrency: CurrencyCode,
+    toCurrency: CurrencyCode,
+    exchangeRateUsdPen: number,
+  ): number {
+    if (fromCurrency === toCurrency) {
+      return amount;
+    }
+
+    if (fromCurrency === 'PEN' && toCurrency === 'USD') {
+      return amount / exchangeRateUsdPen;
+    }
+
+    if (fromCurrency === 'USD' && toCurrency === 'PEN') {
+      return amount * exchangeRateUsdPen;
+    }
+
+    return amount;
+  }
+
+  private roundMoney(value: number): number {
+    return Math.round((value + Number.EPSILON) * 100) / 100;
   }
 
   addExpense(): void {
@@ -309,11 +495,100 @@ export class SimulationForm {
       group.controls.paymentBehavior.setValue('FINANCED');
       group.controls.installmentStart.setValue(1);
       group.controls.installmentEnd.setValue(1);
+
+      this.clearPeriodErrors(group);
       return;
     }
 
     group.controls.type.setValue('PERIODICO');
     group.controls.paymentBehavior.setValue('PAID_IN_INSTALLMENT');
+
+    const currentStart = group.controls.installmentStart.value;
+    const currentEnd = group.controls.installmentEnd.value;
+
+    group.controls.installmentStart.setValue(currentStart >= 1 ? currentStart : 1);
+    group.controls.installmentEnd.setValue(currentEnd > 1 ? currentEnd : this.maxExpensePeriod());
+
+    this.validateExpensePeriods();
+  }
+
+  protected maxExpensePeriod(): number {
+    const term = Number(this.form.controls.termMonths.value ?? 0);
+
+    return Math.max(term + 1, 1);
+  }
+
+  protected expenseBehaviorLabel(group: ExpenseGroup): string {
+    return group.controls.paymentBehavior.value === 'FINANCED' ? 'Financiado' : 'Pagado en cuota';
+  }
+
+  protected validateExpensePeriods(): boolean {
+    let isValid = true;
+    const maxPeriod = this.maxExpensePeriod();
+
+    this.additionalExpenses.controls.forEach((group) => {
+      const stage = group.controls.expenseStage.value;
+
+      this.enforceExpenseBehavior(group);
+      this.clearPeriodErrors(group);
+
+      if (stage !== 'PERIODIC') {
+        return;
+      }
+
+      const start = Number(group.controls.installmentStart.value);
+      const end = Number(group.controls.installmentEnd.value);
+
+      if (!start || start < 1) {
+        this.setControlError(group.controls.installmentStart, 'invalidStartPeriod', true);
+        isValid = false;
+      }
+
+      if (!end || end < start) {
+        this.setControlError(group.controls.installmentEnd, 'invalidEndPeriod', true);
+        isValid = false;
+      }
+
+      if (end > maxPeriod) {
+        this.setControlError(group.controls.installmentEnd, 'maxExpensePeriodExceeded', true);
+        isValid = false;
+      }
+    });
+
+    return isValid;
+  }
+
+  private enforceExpenseBehavior(group: ExpenseGroup): void {
+    const stage = group.controls.expenseStage.value;
+
+    if (stage === 'INITIAL') {
+      group.controls.type.setValue('UNICO', { emitEvent: false });
+      group.controls.paymentBehavior.setValue('FINANCED', { emitEvent: false });
+      group.controls.installmentStart.setValue(1, { emitEvent: false });
+      group.controls.installmentEnd.setValue(1, { emitEvent: false });
+      return;
+    }
+
+    group.controls.type.setValue('PERIODICO', { emitEvent: false });
+    group.controls.paymentBehavior.setValue('PAID_IN_INSTALLMENT', { emitEvent: false });
+  }
+
+  private clearPeriodErrors(group: ExpenseGroup): void {
+    this.setControlError(group.controls.installmentStart, 'invalidStartPeriod', false);
+    this.setControlError(group.controls.installmentEnd, 'invalidEndPeriod', false);
+    this.setControlError(group.controls.installmentEnd, 'maxExpensePeriodExceeded', false);
+  }
+
+  private setControlError(control: FormControl<number>, errorKey: string, enabled: boolean): void {
+    const errors = { ...(control.errors ?? {}) };
+
+    if (enabled) {
+      errors[errorKey] = true;
+    } else {
+      delete errors[errorKey];
+    }
+
+    control.setErrors(Object.keys(errors).length > 0 ? errors : null);
   }
 
   private buildInput(): CreditSimulationInput {
@@ -354,6 +629,7 @@ export class SimulationForm {
 
       rateType: value.rateType,
       interestRate: value.interestRate,
+      ratePeriod: value.ratePeriod,
       capitalization: value.rateType === 'NOMINAL' ? value.capitalization : null,
 
       paymentFrequencyDays: value.paymentFrequencyDays,
@@ -390,7 +666,7 @@ export class SimulationForm {
   }
 
   simulate(): void {
-    if (this.form.invalid) {
+    if (!this.validateExpensePeriods() || this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
@@ -406,7 +682,8 @@ export class SimulationForm {
   save(): void {
     const result = this.result();
 
-    if (!result || this.form.invalid) {
+    if (!result || !this.validateExpensePeriods() || this.form.invalid) {
+      this.form.markAllAsTouched();
       return;
     }
 
@@ -424,6 +701,7 @@ export class SimulationForm {
 
       currency: value.currency,
       currencyCatalogId: value.currencyCatalogId || null,
+      exchangeRateUsdPen: value.exchangeRateUsdPen,
 
       disbursementDate: value.disbursementDate,
 
@@ -473,6 +751,61 @@ export class SimulationForm {
       default:
         return 'simulation.period-normal';
     }
+  }
+  pgLabel(periodType: PeriodType, cashFlowType: string): string {
+    if (cashFlowType === 'BALLOON') {
+      return 'S';
+    }
+
+    switch (periodType) {
+      case 'GRACIA_TOTAL':
+        return 'T';
+      case 'GRACIA_PARCIAL':
+        return 'P';
+      default:
+        return 'S';
+    }
+  }
+
+  excelInitialBalance(period: {
+    initialRegularBalance: number;
+    initialFinalQuotaBalance: number;
+  }): number {
+    return period.initialRegularBalance + period.initialFinalQuotaBalance;
+  }
+
+  excelInterest(period: { regularInterest: number; finalQuotaInterest: number }): number {
+    return period.regularInterest + period.finalQuotaInterest;
+  }
+
+  excelDesgravamen(period: { regularDesgravamen: number; finalQuotaDesgravamen: number }): number {
+    return period.regularDesgravamen + period.finalQuotaDesgravamen;
+  }
+
+  excelQuota(period: {
+    regularQuota: number;
+    balloonPayment: number;
+    cashFlowType: string;
+  }): number {
+    if (period.cashFlowType === 'BALLOON') {
+      return 0;
+    }
+
+    return period.regularQuota;
+  }
+
+  excelAmortization(period: {
+    regularAmortization: number;
+    finalQuotaAmortization: number;
+  }): number {
+    return period.regularAmortization + period.finalQuotaAmortization;
+  }
+
+  excelFinalBalance(period: {
+    finalRegularBalance: number;
+    finalFinalQuotaBalance: number;
+  }): number {
+    return period.finalRegularBalance + period.finalFinalQuotaBalance;
   }
 
   cashFlowTypeLabel(cashFlowType: string): string {
