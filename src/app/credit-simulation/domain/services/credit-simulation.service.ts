@@ -588,7 +588,7 @@ export class CreditSimulationService {
     const desgravamen = params.initialBalance * params.desgravamenRate;
 
     if (params.periodType === 'GRACIA_TOTAL') {
-      const finalBalance = params.initialBalance + interest + desgravamen;
+      const finalBalance = params.initialBalance + interest; // ← solo interés capitaliza
 
       return {
         initialBalance: params.initialBalance,
@@ -596,7 +596,7 @@ export class CreditSimulationService {
         desgravamen,
         quota: 0,
         amortization: 0,
-        payment: 0,
+        payment: desgravamen, // ← desgravamen sí se paga
         finalBalance,
       };
     }

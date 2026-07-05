@@ -43,8 +43,7 @@ export class Help {
     },
   ];
 
-  readonly whatsappUrl =
-    'https://wa.me/51997228047?text=Hola%2C%20necesito%20ayuda%20con%20Credit%20Drive.';
+  readonly whatsappUrl = 'https://web.whatsapp.com';
 
   toggleCard(card: HelpCard): void {
     this.activeCard.update((current) => (current === card ? null : card));
