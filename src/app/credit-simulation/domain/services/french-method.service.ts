@@ -1,5 +1,5 @@
 import {GraceType, PeriodType} from '../model/credit-simulation.types';
-
+// Calendario
 export interface SchedulePeriod {
   installmentNumber: number;
   periodType: PeriodType;
